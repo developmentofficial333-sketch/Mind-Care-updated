@@ -7,6 +7,20 @@ import NavDropdown from "./NavDropdown";
 import { useAuth } from "../../hooks/useAuth";
 import { primaryNavLinks, utilityNavLinks } from "../../data/navigation";
 
+// Real internal routes (href starting with "/") get SPA navigation; the
+// still-unbuilt placeholder links ("#") stay as plain anchors.
+function NavLink({ href, className, children }) {
+  return href.startsWith("/") ? (
+    <Link to={href} className={className}>
+      {children}
+    </Link>
+  ) : (
+    <a href={href} className={className}>
+      {children}
+    </a>
+  );
+}
+
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
@@ -23,13 +37,13 @@ export default function Header() {
             link.submenu ? (
               <NavDropdown key={link.label} label={link.label} submenu={link.submenu} />
             ) : (
-              <a
+              <NavLink
                 key={link.label}
                 href={link.href}
                 className="text-sm font-medium text-ink-soft hover:text-ink"
               >
                 {link.label}
-              </a>
+              </NavLink>
             )
           )}
         </nav>
@@ -42,15 +56,15 @@ export default function Header() {
           ))}
 
           {user ? (
-            <Button as={Link} to="/account" variant="primary">
-              My account
+            <Button as={Link} to="/app" variant="primary">
+              Go to MindCare
             </Button>
           ) : (
             <>
-              <Link to="/login" className="text-sm font-medium text-ink-soft hover:text-ink">
+              <Link to="/app/login" className="text-sm font-medium text-ink-soft hover:text-ink">
                 Log In
               </Link>
-              <Button as={Link} to="/signup" variant="primary">
+              <Button as={Link} to="/app/register" variant="primary">
                 Try for free
               </Button>
             </>
@@ -76,26 +90,26 @@ export default function Header() {
         <div className="border-t border-border bg-white lg:hidden">
           <Container className="flex flex-col gap-4 py-4">
             {primaryNavLinks.map((link) => (
-              <a key={link.label} href={link.href} className="text-sm font-medium text-ink">
+              <NavLink key={link.label} href={link.href} className="text-sm font-medium text-ink">
                 {link.label}
-              </a>
+              </NavLink>
             ))}
             {utilityNavLinks.map((link) => (
-              <a key={link.label} href={link.href} className="text-sm font-medium text-ink">
+              <NavLink key={link.label} href={link.href} className="text-sm font-medium text-ink">
                 {link.label}
-              </a>
+              </NavLink>
             ))}
 
             {user ? (
-              <Button as={Link} to="/account" variant="primary" className="w-full">
-                My account
+              <Button as={Link} to="/app" variant="primary" className="w-full">
+                Go to MindCare
               </Button>
             ) : (
               <>
-                <Link to="/login" className="text-sm font-medium text-ink">
+                <Link to="/app/login" className="text-sm font-medium text-ink">
                   Log In
                 </Link>
-                <Button as={Link} to="/signup" variant="primary" className="w-full">
+                <Button as={Link} to="/app/register" variant="primary" className="w-full">
                   Try for free
                 </Button>
               </>

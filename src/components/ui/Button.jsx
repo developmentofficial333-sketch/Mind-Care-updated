@@ -2,6 +2,7 @@ const VARIANTS = {
   primary: "bg-cta-bg text-cta-text hover:bg-cta-bg-hover",
   outline: "bg-transparent text-ink border border-ink hover:bg-ink hover:text-white",
   onDark: "bg-white text-ink hover:bg-cream",
+  blue: "bg-brand-blue text-white hover:bg-brand-blue-dark",
 };
 
 export default function Button({

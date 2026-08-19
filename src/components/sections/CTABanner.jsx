@@ -9,7 +9,7 @@ export default function CTABanner() {
         <h2 className="text-3xl md:text-5xl font-semibold tracking-tight text-ink">
           Get your mindcare
         </h2>
-        <Button as={Link} to="/signup" variant="primary" className="px-8 py-4 text-base">
+        <Button as={Link} to="/app/register" variant="primary" className="px-8 py-4 text-base">
           Try for free
         </Button>
       </Container>

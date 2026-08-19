@@ -31,3 +31,41 @@ export async function subscribeToNewsletter(email) {
     throw err;
   }
 }
+
+const DEMO_REQUEST_COLLECTION = "demoRequests";
+
+/**
+ * Saves a "Request a demo" form submission (RequestDemoPage.jsx). Unlike the
+ * newsletter form, repeat submissions are expected (a lead can inquire more
+ * than once), so this is a plain create-only write with no id-based
+ * duplicate check.
+ */
+export async function submitDemoRequest(formData) {
+  const { getFirestore, collection, addDoc, serverTimestamp } = await import("firebase/firestore");
+
+  const db = getFirestore(app);
+  await addDoc(collection(db, DEMO_REQUEST_COLLECTION), {
+    ...formData,
+    createdAt: serverTimestamp(),
+  });
+}
+
+const PROVIDER_APPLICATION_COLLECTION = "providerApplications";
+
+/**
+ * Saves a "Join as a provider" application (ProviderApplicationPage.jsx).
+ * This is intentionally NOT a self-serve signup — providers must be
+ * credential-verified by MindCare's team before they can offer care (per
+ * the platform's clinical safety requirements), so this just queues the
+ * application for manual review, same create-only pattern as demo requests.
+ */
+export async function submitProviderApplication(formData) {
+  const { getFirestore, collection, addDoc, serverTimestamp } = await import("firebase/firestore");
+
+  const db = getFirestore(app);
+  await addDoc(collection(db, PROVIDER_APPLICATION_COLLECTION), {
+    ...formData,
+    status: "pending_review",
+    createdAt: serverTimestamp(),
+  });
+}

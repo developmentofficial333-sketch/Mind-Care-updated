@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Container from "../ui/Container";
 import Button from "../ui/Button";
 import PhoneMockup from "../ui/PhoneMockup";
@@ -20,7 +21,7 @@ export default function Hero() {
             <p className="mt-2 text-sm text-ink-soft">
               Expert-led meditations and tools for a calmer mind.
             </p>
-            <Button variant="primary" className="mt-5">
+            <Button as={Link} to="/app/register" variant="primary" className="mt-5">
               Try for $0
             </Button>
           </div>

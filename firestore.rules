@@ -15,6 +15,78 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // "Request a demo" form (RequestDemoPage.jsx). Repeat submissions are
+    // expected, so this is a plain create-only write — no read/list access,
+    // so nobody's submitted contact details are exposed to other clients.
+    match /demoRequests/{id} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
+    // MindCare clinical app (/app routes). Identity data and clinical data
+    // are split into separate collections, each owner-scoped by uid — no
+    // client, including the owner, ever gets list/read access to anyone
+    // else's documents.
+    match /memberProfiles/{uid} {
+      allow read, create, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+    match /memberNeeds/{uid} {
+      allow read, create, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
+    // Appointments are a subcollection under the owning member's own uid
+    // path, not a top-level collection filtered by a memberUid field —
+    // that makes owner-scoping trivial and airtight (no query-shape
+    // assumptions needed) instead of relying on the client always
+    // filtering correctly.
+    match /members/{uid}/appointments/{appointmentId} {
+      allow read, create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false;
+
+      // Post-session feedback (FollowUpPage.jsx) — append-only, kept
+      // separate from the appointment doc above so the original booking
+      // record stays immutable.
+      match /feedback/{feedbackId} {
+        allow read, create: if request.auth != null && request.auth.uid == uid;
+        allow update, delete: if false;
+      }
+    }
+
+    // Real-time booking-slot reservations (booking.js). Two collections,
+    // written together in one transaction, cover both real conflicts a
+    // national-scale booking system has to prevent:
+    //  - PROVIDER-scoped: stops two different members booking the same
+    //    provider at the same date/time.
+    //  - MEMBER-scoped: stops one member holding two appointments (with
+    //    any provider) at the same date/time.
+    // Both rely on `create` being the only granted operation — Firestore
+    // treats a write to an existing doc id as an `update`, so a second
+    // reservation attempt at the same id is rejected by the rules
+    // themselves, not just a client-side check. No identifying info about
+    // who booked is stored on the provider side.
+    match /providers/{providerId}/bookedSlots/{slotId} {
+      allow read, create: if request.auth != null;
+      allow update, delete: if false;
+    }
+    match /members/{uid}/bookedSlots/{slotId} {
+      allow read, create: if request.auth != null && request.auth.uid == uid;
+      allow update, delete: if false;
+    }
+
+    // "Join as a provider" application (ProviderApplicationPage.jsx). Not a
+    // self-serve signup — this just queues an application for MindCare's
+    // team to manually verify credentials, same create-only public-form
+    // pattern as demoRequests. No read access, so applicants' contact and
+    // license details are never exposed to other clients.
+    match /providerApplications/{id} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
     // Everything else stays locked down by default.
     match /{document=**} {
       allow read, write: if false;

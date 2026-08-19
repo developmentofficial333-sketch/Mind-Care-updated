@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Icon from "../ui/Icon";
 
 function ColumnSection({ heading, items }) {
@@ -45,8 +46,8 @@ export default function NavDropdown({ label, submenu }) {
           ))}
 
           {promo && (
-            <a
-              href={promo.href}
+            <Link
+              to={promo.href}
               className="flex w-44 shrink-0 flex-col justify-between self-start overflow-hidden rounded-md bg-brand-blue p-4"
             >
               <Icon name="sparkle" className="h-6 w-6 text-white/80" />
@@ -54,7 +55,7 @@ export default function NavDropdown({ label, submenu }) {
                 {promo.title}
                 <Icon name="arrowRight" className="h-4 w-4" />
               </span>
-            </a>
+            </Link>
           )}
         </div>
       </div>

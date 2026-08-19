@@ -10,7 +10,7 @@ export default function AppStats() {
         <h2 className="max-w-xl text-3xl font-semibold tracking-tight md:text-5xl">
           Join the millions who use mindcare every day
         </h2>
-        <Button as={Link} to="/signup" variant="onDark">
+        <Button as={Link} to="/app/register" variant="onDark">
           Try for free
         </Button>
 

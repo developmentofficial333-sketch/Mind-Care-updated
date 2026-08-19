@@ -53,6 +53,29 @@
   --radius-md: 16px;
   --radius-lg: 28px;
   --radius-pill: 999px;
+
+  /* ---- Clinical platform palette ----
+     A second, deliberately distinct brand surface: the real MindCare member
+     journey (booking, providers, sessions — see /app routes), as opposed to
+     the marketing site above. Kept in this same @theme block because
+     Tailwind v4 only has one global theme, but namespaced `clinical-*` so
+     the two brands never collide. Still just one file to edit for either. */
+  --color-clinical-ink: oklch(24% 0.03 240);
+  --color-clinical-ink-soft: oklch(45% 0.02 240);
+  --color-clinical-bg: oklch(97% 0.01 95);
+  --color-clinical-surface: oklch(99% 0.005 95);
+  --color-clinical-border: oklch(90% 0.01 95);
+  --color-clinical-teal: oklch(38% 0.07 185);
+  --color-clinical-teal-dark: oklch(30% 0.07 185);
+  --color-clinical-teal-soft: oklch(93% 0.03 185);
+  --color-clinical-amber: oklch(76% 0.14 70);
+  --color-clinical-amber-dark: oklch(64% 0.15 65);
+  --color-clinical-crisis: oklch(56% 0.17 25);
+  --color-clinical-crisis-dark: oklch(48% 0.17 25);
+  --color-clinical-success: oklch(55% 0.12 155);
+
+  --font-clinical-heading: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-clinical-body: "Karla", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 :root {
