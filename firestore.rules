@@ -1,0 +1,23 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Public newsletter signup form (Newsletter.jsx / useNewsletterSignup).
+    // Doc id is the subscriber's email, so only a first-time `create` is
+    // allowed — the app never gets read/list access to other people's
+    // emails, and a duplicate signup is rejected by rules rather than by
+    // a client-side query.
+    match /newsletterSubscribers/{email} {
+      allow create: if request.resource.data.email is string
+                    && request.resource.data.email == email
+                    && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
+    // Everything else stays locked down by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
