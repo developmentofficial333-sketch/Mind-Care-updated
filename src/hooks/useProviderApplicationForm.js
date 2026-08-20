@@ -39,7 +39,8 @@ export function useProviderApplicationForm() {
       await submitProviderApplication(form);
       setStatus("success");
       setForm(INITIAL_FORM);
-    } catch {
+    } catch (err) {
+      console.error("Provider application submission failed:", err);
       setStatus("error");
     }
   }, [form]);

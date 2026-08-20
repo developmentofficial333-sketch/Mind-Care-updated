@@ -31,7 +31,8 @@ export function useDemoRequestForm() {
       await submitDemoRequest(form);
       setStatus("success");
       setForm(INITIAL_FORM);
-    } catch {
+    } catch (err) {
+      console.error("Demo request submission failed:", err);
       setStatus("error");
     }
   }, [form]);
