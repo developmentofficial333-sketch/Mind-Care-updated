@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { resources } from "../data/resources";
 import { providers } from "../data/providers";
+import { ResourceCard, ResourceModal } from "../components/ResourceCard";
 
 const FEE_BANDS = [
   { label: "Under Rs 3,000", test: (fee) => fee < 3000 },
@@ -12,19 +13,6 @@ const FEE_BANDS = [
 function uniqueValues(list, getValue) {
   const values = list.flatMap(getValue);
   return [...new Set(values)].sort();
-}
-
-function ResourceCard({ resource }) {
-  return (
-    <div className="rounded-2xl border border-clinical-border bg-clinical-surface p-3.5">
-      <span className="text-[11px] font-bold uppercase text-clinical-teal-dark">
-        {resource.type} &middot; {resource.length}
-      </span>
-      <h3 className="font-clinical-heading mt-1 text-sm font-bold text-clinical-ink">
-        {resource.title}
-      </h3>
-    </div>
-  );
 }
 
 function ProviderCard({ provider }) {
@@ -62,18 +50,29 @@ function ProviderCard({ provider }) {
 const INITIAL_FILTERS = { discipline: "", concern: "", language: "", location: "", feeBand: "" };
 
 export default function CarePage() {
-  const [tab, setTab] = useState("providers");
+  const location = useLocation();
+  const [tab, setTab] = useState(location.state?.tab === "resources" ? "resources" : "providers");
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState(INITIAL_FILTERS);
+  const [resourceCategory, setResourceCategory] = useState("All");
+  const [openResource, setOpenResource] = useState(null);
 
   const disciplines = useMemo(() => uniqueValues(providers, (p) => p.discipline), []);
   const concerns = useMemo(() => uniqueValues(providers, (p) => p.concerns), []);
   const languages = useMemo(() => uniqueValues(providers, (p) => p.languages), []);
   const locations = useMemo(() => uniqueValues(providers, (p) => p.location), []);
-
-  const filteredResources = resources.filter((resource) =>
-    resource.title.toLowerCase().includes(search.toLowerCase())
+  const resourceCategories = useMemo(
+    () => ["All", ...uniqueValues(resources, (r) => r.category)],
+    []
   );
+
+  const filteredResources = resources.filter((resource) => {
+    if (resourceCategory !== "All" && resource.category !== resourceCategory) return false;
+    const query = search.toLowerCase();
+    return (
+      resource.title.toLowerCase().includes(query) || resource.tag.toLowerCase().includes(query)
+    );
+  });
 
   const filteredProviders = providers.filter((provider) => {
     if (filters.discipline && provider.discipline !== filters.discipline) return false;
@@ -127,10 +126,28 @@ export default function CarePage() {
             placeholder="Search resources..."
             className="w-full rounded-full border border-clinical-border bg-clinical-surface px-4 py-2.5 text-sm outline-none focus:border-clinical-teal"
           />
+
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {resourceCategories.map((category) => (
+              <button
+                key={category}
+                type="button"
+                onClick={() => setResourceCategory(category)}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold ${
+                  resourceCategory === category
+                    ? "bg-clinical-teal text-white"
+                    : "border border-clinical-border bg-clinical-surface text-clinical-ink-soft"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-4 flex flex-col gap-3">
             {filteredResources.length ? (
               filteredResources.map((resource) => (
-                <ResourceCard key={resource.title} resource={resource} />
+                <ResourceCard key={resource.id} resource={resource} onOpen={setOpenResource} />
               ))
             ) : (
               <p className="py-6 text-center text-sm text-clinical-ink-soft">
@@ -138,6 +155,10 @@ export default function CarePage() {
               </p>
             )}
           </div>
+
+          {openResource && (
+            <ResourceModal resource={openResource} onClose={() => setOpenResource(null)} />
+          )}
         </div>
       )}
 

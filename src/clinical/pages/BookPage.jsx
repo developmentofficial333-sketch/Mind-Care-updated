@@ -14,6 +14,27 @@ const CONFLICT_MESSAGES = {
   "member-conflict": "You already have another appointment at this time — please choose a different time.",
 };
 
+const CORPORATE_FEE_LABEL = "PKR 0 (Covered by Employer)";
+
+function Toggle({ on, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={on}
+      className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors ${
+        on ? "bg-clinical-teal" : "bg-clinical-border"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white transition-all ${
+          on ? "left-[20px]" : "left-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
 /** The next `count` real calendar days, starting today — not placeholder dates. */
 function getUpcomingDays(count = 7) {
   const today = new Date();
@@ -39,6 +60,8 @@ export default function BookPage() {
   const [checkingAvailability, setCheckingAvailability] = useState(true);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
+  const [isCorporate, setIsCorporate] = useState(false);
+  const [companyName, setCompanyName] = useState("");
 
   const chosenDay = days[dayIndex];
 
@@ -82,6 +105,10 @@ export default function BookPage() {
   const dateLabel = `${chosenDay.label} ${chosenDay.num}`;
 
   async function handleConfirm() {
+    if (isCorporate && !companyName.trim()) {
+      setError("Enter your work email or company name to apply your corporate benefit.");
+      return;
+    }
     setBooking(true);
     setError("");
     try {
@@ -92,7 +119,9 @@ export default function BookPage() {
         dateLabel,
         isoDate: chosenDay.isoDate,
         time,
-        fee: provider.fee,
+        fee: isCorporate ? CORPORATE_FEE_LABEL : provider.fee,
+        bookingType: isCorporate ? "corporate" : "self-pay",
+        companyName: isCorporate ? companyName.trim() : null,
       });
       navigate(`/app/confirmation/${appointmentId}`);
     } catch (err) {
@@ -187,10 +216,41 @@ export default function BookPage() {
             {dateLabel}, {time}
           </span>
         </div>
-        <div className="flex justify-between text-xs">
+        <div className="flex items-center justify-between text-xs">
           <span className="text-clinical-ink-soft">Fee</span>
-          <span className="font-bold text-clinical-ink">{provider.fee}</span>
+          <span className="font-bold text-clinical-ink">{isCorporate ? CORPORATE_FEE_LABEL : provider.fee}</span>
         </div>
+        {isCorporate && (
+          <div className="mt-2 flex justify-end">
+            <span className="inline-flex items-center gap-1 rounded-full bg-clinical-success/15 px-2.5 py-1 text-[10px] font-bold text-clinical-success">
+              &#10003; Corporate Benefit Applied
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-clinical-border bg-clinical-surface p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-clinical-ink">Company Sponsored Session</p>
+            <p className="text-[11px] text-clinical-ink-soft">B2B Benefit &mdash; covered by your employer</p>
+          </div>
+          <Toggle on={isCorporate} onClick={() => setIsCorporate((v) => !v)} />
+        </div>
+
+        {isCorporate && (
+          <label className="mt-3 flex flex-col gap-1.5 border-t border-clinical-border pt-3 text-sm">
+            <span className="font-semibold text-clinical-ink">Work email / company name*</span>
+            <input
+              type="text"
+              required
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="you@company.com or Company Inc."
+              className="rounded-lg border border-clinical-border bg-white px-3 py-2.5 text-sm outline-none focus:border-clinical-teal"
+            />
+          </label>
+        )}
       </div>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
@@ -198,7 +258,7 @@ export default function BookPage() {
       <button
         type="button"
         onClick={handleConfirm}
-        disabled={booking || checkingAvailability}
+        disabled={booking || checkingAvailability || (isCorporate && !companyName.trim())}
         className="font-clinical-heading mt-4 w-full rounded-full bg-clinical-amber px-5 py-3.5 text-sm font-bold text-clinical-ink hover:bg-clinical-amber-dark disabled:opacity-60"
       >
         {booking ? "Booking..." : "Confirm booking"}

@@ -7,7 +7,8 @@
  * Firestore-backed `providers` collection once verified provider records
  * exist. The filter fields (discipline, concerns, languages, location,
  * feeAmount) are real and drive genuinely functional filtering in
- * CarePage.jsx — only the underlying provider data itself is fictional.
+ * CarePage.jsx and the matching quiz (ClinicalQuizPage.jsx) — only the
+ * underlying provider data itself is fictional.
  */
 export const providers = [
   {
@@ -16,7 +17,7 @@ export const providers = [
     name: "Dr. Sara Nadeem",
     credentials: "Clinical Psychologist",
     discipline: "Psychologist",
-    concerns: ["Anxiety", "CBT"],
+    concerns: ["Anxiety", "Panic", "CBT"],
     languages: ["English", "Urdu"],
     location: "Karachi",
     rating: 4.9,
@@ -29,7 +30,7 @@ export const providers = [
     name: "Dr. Bilal Ahmed",
     credentials: "Psychiatrist",
     discipline: "Psychiatrist",
-    concerns: ["Mood disorders"],
+    concerns: ["Mood disorders", "Stress", "Burnout"],
     languages: ["English", "Urdu"],
     location: "Lahore",
     rating: 4.8,
@@ -42,11 +43,24 @@ export const providers = [
     name: "Hina Raza, LPC",
     credentials: "Counsellor",
     discipline: "Counsellor",
-    concerns: ["Relationships", "Grief"],
+    concerns: ["Relationships", "Family", "Grief"],
     languages: ["English"],
     location: "Islamabad",
     rating: 5.0,
     fee: "Rs 2,800 / session",
     feeAmount: 2800,
+  },
+  {
+    id: "ayesha-malik",
+    initials: "AM",
+    name: "Dr. Ayesha Malik",
+    credentials: "Clinical Psychologist",
+    discipline: "Psychologist",
+    concerns: ["Sleep", "Insomnia", "Focus", "ADHD"],
+    languages: ["English", "Urdu"],
+    location: "Lahore",
+    rating: 4.7,
+    fee: "Rs 3,200 / session",
+    feeAmount: 3200,
   },
 ];

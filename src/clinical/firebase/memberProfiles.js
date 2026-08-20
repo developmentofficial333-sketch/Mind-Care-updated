@@ -21,3 +21,11 @@ export async function createMemberProfile(uid, { fullName, email, preferredLangu
     createdAt: serverTimestamp(),
   });
 }
+
+export async function getMemberProfile(uid) {
+  const { getFirestore, doc, getDoc } = await import("firebase/firestore");
+
+  const db = getFirestore(app);
+  const snapshot = await getDoc(doc(db, MEMBER_PROFILES_COLLECTION, uid));
+  return snapshot.exists() ? snapshot.data() : null;
+}

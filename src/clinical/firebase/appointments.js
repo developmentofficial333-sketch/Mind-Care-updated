@@ -17,3 +17,19 @@ export async function getAppointment(uid, appointmentId) {
   const snapshot = await getDoc(doc(db, "members", uid, "appointments", appointmentId));
   return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
 }
+
+/**
+ * All of this member's appointments, past and upcoming, sorted chronologically.
+ * `isoDate` is a YYYY-MM-DD string, so lexicographic ordering is chronological.
+ */
+export async function listAppointments(uid) {
+  const { getFirestore, collection, query, orderBy, getDocs } = await import(
+    "firebase/firestore"
+  );
+
+  const db = getFirestore(app);
+  const snapshot = await getDocs(
+    query(collection(db, "members", uid, "appointments"), orderBy("isoDate", "asc"))
+  );
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+}

@@ -18,18 +18,18 @@ function ColumnSection({ heading, items }) {
   );
 }
 
-export default function NavDropdown({ label, submenu }) {
+export default function NavDropdown({ label, href, submenu }) {
   const { columnGroups, promo } = submenu;
 
   return (
     <div className="group relative">
-      <button
-        type="button"
+      <Link
+        to={href}
         className="flex items-center gap-1 py-2 text-sm font-medium text-ink-soft hover:text-ink"
       >
         {label}
         <Icon name="chevronDown" className="h-3.5 w-3.5 transition-transform group-hover:rotate-180" />
-      </button>
+      </Link>
 
       <div
         className="invisible absolute left-1/2 top-full z-40 -translate-x-1/2 pt-3 opacity-0 transition-all

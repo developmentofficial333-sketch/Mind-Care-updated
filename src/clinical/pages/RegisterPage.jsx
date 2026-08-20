@@ -3,10 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { signUp } from "../../firebase/auth";
 import { getAuthErrorMessage } from "../../firebase/authErrors";
 import { createMemberProfile } from "../firebase/memberProfiles";
+import { useLanguage } from "../../hooks/useLanguage";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [language, setLanguage] = useState("en");
+  // Global site language — picking a language here also switches the whole
+  // app's display language immediately (useLanguage persists it too), not
+  // just what gets saved as this member's preference.
+  const { language, setLanguage } = useLanguage();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +34,7 @@ export default function RegisterPage() {
         email,
         preferredLanguage: language,
       });
-      navigate("/app/identify-need");
+      navigate("/dashboard");
     } catch (err) {
       console.error("Registration failed:", err);
       setError(getAuthErrorMessage(err.code));

@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap");
 @import "tailwindcss";
 @import "./styles/theme.css";
 
@@ -33,6 +34,14 @@
     display: block;
   }
 
+  /* Global Urdu language mode — LanguageProvider sets dir="rtl" on <html>
+     when Urdu is active. Switching the body font here (rather than adding a
+     class to every translated element) means it applies automatically
+     everywhere, including strings not yet wired into the translation table. */
+  html[dir="rtl"] body {
+    font-family: var(--font-urdu);
+  }
+
   button {
     font-family: inherit;
     cursor: pointer;
@@ -55,4 +64,20 @@
 
 .animate-marquee {
   animation: marquee-scroll 28s linear infinite;
+}
+
+/* Gentle drift for decorative background emoji — duration/delay are varied
+   per element via inline style so a cluster of them doesn't move in lockstep. */
+@keyframes float-drift {
+  0%,
+  100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) translateX(6px) rotate(6deg);
+  }
+}
+
+.animate-float {
+  animation: float-drift 6s ease-in-out infinite;
 }

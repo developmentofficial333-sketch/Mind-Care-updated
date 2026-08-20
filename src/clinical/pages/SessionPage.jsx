@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getAppointment } from "../firebase/appointments";
+import VideoCallModal from "../components/VideoCallModal";
 
 export default function SessionPage() {
   const { appointmentId } = useParams();
   const { user } = useAuth();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCall, setShowCall] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,18 +55,28 @@ export default function SessionPage() {
       </p>
 
       {isOnline ? (
-        <div className="mt-4 flex aspect-[3/4] flex-col items-center justify-center gap-3 rounded-2xl bg-clinical-ink px-6 text-center">
+        <div className="mt-4 flex flex-col items-center gap-3 rounded-2xl bg-clinical-ink px-6 py-8 text-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.6">
               <rect x="2" y="6" width="14" height="12" rx="2" />
               <path d="M16 10l4-2v8l-4-2" />
             </svg>
           </div>
-          <p className="text-sm font-semibold text-white">Video session via Zoom</p>
+          <p className="text-sm font-semibold text-white">Video session with {appointment.providerName}</p>
           <p className="text-xs text-white/60">
-            Zoom integration is not connected yet — this is where the live video will appear once
-            the account is set up.
+            Your secure video room is ready. Join when you&apos;re both connected.
           </p>
+          <button
+            type="button"
+            onClick={() => setShowCall(true)}
+            className="font-clinical-heading mt-1 flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-clinical-ink hover:bg-white/90"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="2" y="6" width="14" height="12" rx="2" />
+              <path d="M16 10l4-2v8l-4-2" />
+            </svg>
+            Join Secure Video Consultation
+          </button>
         </div>
       ) : (
         <div className="mt-4 rounded-2xl border border-clinical-border bg-clinical-surface p-5">
@@ -99,6 +111,10 @@ export default function SessionPage() {
       >
         Session complete &mdash; leave feedback
       </Link>
+
+      {showCall && (
+        <VideoCallModal providerName={appointment.providerName} onClose={() => setShowCall(false)} />
+      )}
     </div>
   );
 }

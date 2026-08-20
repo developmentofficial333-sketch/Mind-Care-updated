@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import FormField from "../components/ui/FormField";
 import SelectField from "../components/ui/SelectField";
+import Toast from "../components/ui/Toast";
 import DemoHeroIllustration from "../components/ui/DemoHeroIllustration";
 import { useDemoRequestForm } from "../hooks/useDemoRequestForm";
 import { helpOptions, countries, headquarterRegions } from "../data/demoForm";
@@ -20,6 +22,11 @@ function Cloud({ className }) {
 
 export default function RequestDemoPage() {
   const { form, updateField, status, submit } = useDemoRequestForm();
+  const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    if (status === "success") setShowToast(true);
+  }, [status]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -45,143 +52,140 @@ export default function RequestDemoPage() {
           </div>
 
           <div id="demo-form" className="rounded-lg border border-border p-6 shadow-card md:p-8">
-            {status === "success" ? (
-              <div className="py-10 text-center">
-                <h2 className="text-xl font-semibold text-ink">Thanks — request received.</h2>
-                <p className="mt-2 text-sm text-ink-soft">
-                  Our team will reach out to your work email shortly.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <SelectField
-                  id="helpType"
-                  label="How can we help?*"
-                  required
-                  value={form.helpType}
-                  onChange={(e) => updateField("helpType", e.target.value)}
-                >
-                  <option value="" disabled>
-                    Please Select
+            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <SelectField
+                id="helpType"
+                label="How can we help?*"
+                required
+                value={form.helpType}
+                onChange={(e) => updateField("helpType", e.target.value)}
+              >
+                <option value="" disabled>
+                  Please Select
+                </option>
+                {helpOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
                   </option>
-                  {helpOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </SelectField>
+                ))}
+              </SelectField>
 
-                <FormField
-                  id="firstName"
-                  label="First name*"
-                  required
-                  value={form.firstName}
-                  onChange={(e) => updateField("firstName", e.target.value)}
-                />
-                <FormField
-                  id="lastName"
-                  label="Last name*"
-                  required
-                  value={form.lastName}
-                  onChange={(e) => updateField("lastName", e.target.value)}
-                />
-                <FormField
-                  id="email"
-                  label="Work email*"
-                  type="email"
-                  required
-                  value={form.email}
-                  onChange={(e) => updateField("email", e.target.value)}
-                />
+              <FormField
+                id="firstName"
+                label="First name*"
+                required
+                value={form.firstName}
+                onChange={(e) => updateField("firstName", e.target.value)}
+              />
+              <FormField
+                id="lastName"
+                label="Last name*"
+                required
+                value={form.lastName}
+                onChange={(e) => updateField("lastName", e.target.value)}
+              />
+              <FormField
+                id="email"
+                label="Work email*"
+                type="email"
+                required
+                value={form.email}
+                onChange={(e) => updateField("email", e.target.value)}
+              />
 
-                <div>
-                  <span className="text-sm font-medium text-ink">Phone number*</span>
-                  <div className="mt-1.5 flex gap-2">
-                    <select
-                      aria-label="Country code"
-                      value={form.dialCode}
-                      onChange={(e) => updateField("dialCode", e.target.value)}
-                      className="w-32 rounded-md border border-border bg-white px-2 py-2.5 text-sm text-ink outline-none focus:border-ink"
-                    >
-                      {countries.map((country) => (
-                        <option key={country.name} value={country.dialCode}>
-                          {country.name} ({country.dialCode})
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      type="tel"
-                      required
-                      aria-label="Phone number"
-                      value={form.phone}
-                      onChange={(e) => updateField("phone", e.target.value)}
-                      className="flex-1 rounded-md border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-ink"
-                    />
-                  </div>
-                </div>
-
-                <FormField
-                  id="jobTitle"
-                  label="Job title"
-                  value={form.jobTitle}
-                  onChange={(e) => updateField("jobTitle", e.target.value)}
-                />
-                <FormField
-                  id="companyName"
-                  label="Company name*"
-                  required
-                  value={form.companyName}
-                  onChange={(e) => updateField("companyName", e.target.value)}
-                />
-
-                <SelectField
-                  id="headquarters"
-                  label="Where is your company's global headquarters?*"
-                  required
-                  value={form.headquarters}
-                  onChange={(e) => updateField("headquarters", e.target.value)}
-                >
-                  <option value="" disabled>
-                    Please Select
-                  </option>
-                  {headquarterRegions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </SelectField>
-
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label htmlFor="message" className="text-sm font-medium text-ink">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={4}
-                    value={form.message}
-                    onChange={(e) => updateField("message", e.target.value)}
-                    className="resize-none rounded-md border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-ink"
+              <div>
+                <span className="text-sm font-medium text-ink">Phone number*</span>
+                <div className="mt-1.5 flex gap-2">
+                  <select
+                    aria-label="Country code"
+                    value={form.dialCode}
+                    onChange={(e) => updateField("dialCode", e.target.value)}
+                    className="w-32 rounded-md border border-border bg-white px-2 py-2.5 text-sm text-ink outline-none focus:border-ink"
+                  >
+                    {countries.map((country) => (
+                      <option key={country.name} value={country.dialCode}>
+                        {country.name} ({country.dialCode})
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="tel"
+                    required
+                    aria-label="Phone number"
+                    value={form.phone}
+                    onChange={(e) => updateField("phone", e.target.value)}
+                    className="flex-1 rounded-md border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-ink"
                   />
                 </div>
+              </div>
 
-                <p className="text-xs text-ink-soft">
-                  By submitting this form, you agree that we may use the data you provide to
-                  contact you with information related to your request. Your data will be used
-                  subject to mindcare&apos;s privacy policy.
-                </p>
+              <FormField
+                id="jobTitle"
+                label="Job title"
+                value={form.jobTitle}
+                onChange={(e) => updateField("jobTitle", e.target.value)}
+              />
+              <FormField
+                id="companyName"
+                label="Company name*"
+                required
+                value={form.companyName}
+                onChange={(e) => updateField("companyName", e.target.value)}
+              />
 
-                {status === "error" && (
-                  <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
-                )}
+              <SelectField
+                id="headquarters"
+                label="Where is your company's global headquarters?*"
+                required
+                value={form.headquarters}
+                onChange={(e) => updateField("headquarters", e.target.value)}
+              >
+                <option value="" disabled>
+                  Please Select
+                </option>
+                {headquarterRegions.map((region) => (
+                  <option key={region} value={region}>
+                    {region}
+                  </option>
+                ))}
+              </SelectField>
 
-                <Button type="submit" variant="primary" disabled={status === "loading"}>
-                  {status === "loading" ? "Submitting..." : "Submit"}
-                </Button>
-              </form>
-            )}
+              <div className="flex flex-col gap-1.5 text-left">
+                <label htmlFor="message" className="text-sm font-medium text-ink">
+                  Message
+                </label>
+                <textarea
+                  id="message"
+                  rows={4}
+                  value={form.message}
+                  onChange={(e) => updateField("message", e.target.value)}
+                  className="resize-none rounded-md border border-border bg-white px-4 py-2.5 text-sm text-ink outline-none focus:border-ink"
+                />
+              </div>
+
+              <p className="text-xs text-ink-soft">
+                By submitting this form, you agree that we may use the data you provide to
+                contact you with information related to your request. Your data will be used
+                subject to mindcare&apos;s privacy policy.
+              </p>
+
+              {status === "error" && (
+                <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
+              )}
+
+              <Button type="submit" variant="primary" disabled={status === "loading"}>
+                {status === "loading" ? "Submitting..." : "Submit"}
+              </Button>
+            </form>
           </div>
         </Container>
       </section>
+
+      <Toast
+        message="Thank you! Our workplace wellness team will reach out within 24 hours."
+        show={showToast}
+        onClose={() => setShowToast(false)}
+      />
 
       <section className="bg-white pb-16">
         <Container>

@@ -46,7 +46,7 @@ export default function VisitPage() {
       </p>
 
       <Link
-        to="/app/register"
+        to="/app/quiz"
         className="font-clinical-heading mt-5 block rounded-full bg-clinical-amber px-5 py-3.5 text-center text-sm font-bold text-clinical-ink hover:bg-clinical-amber-dark"
       >
         Get started

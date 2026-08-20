@@ -2,7 +2,7 @@ export const primaryNavLinks = [
   { label: "For You", href: "#" },
   {
     label: "For Business",
-    href: "#",
+    href: "/request-demo",
     submenu: {
       // Two side-by-side column groups, each stacking two link sections —
       // matches the reference site's 2x2 layout under "For Business".
@@ -54,7 +54,7 @@ export const primaryNavLinks = [
   },
   { label: "For Providers", href: "/providers" },
   { label: "Our Plans", href: "#" },
-  { label: "Resources", href: "#" },
+  { label: "Resources", href: "/#resources" },
   { label: "About", href: "#" },
 ];
 

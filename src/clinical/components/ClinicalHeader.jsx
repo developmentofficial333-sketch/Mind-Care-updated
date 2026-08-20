@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "../../hooks/useLanguage";
 
 export default function ClinicalHeader() {
+  const { language, setLanguage } = useLanguage();
+
   return (
     <header className="flex items-center justify-between border-b border-clinical-border bg-clinical-surface px-4 py-3.5">
       <Link to="/app" className="flex items-center gap-2" aria-label="MindCare home">
@@ -19,13 +22,31 @@ export default function ClinicalHeader() {
         </span>
       </Link>
 
-      {/* Visual language preference for now — full Urdu translation is not
-          wired up yet; see project memory for scope notes. */}
       <div className="flex rounded-full bg-clinical-teal-soft p-0.5">
-        <span className="rounded-full bg-clinical-surface px-2.5 py-1 text-xs font-bold text-clinical-teal-dark">
+        <button
+          type="button"
+          onClick={() => setLanguage("en")}
+          aria-pressed={language === "en"}
+          className={`rounded-full px-2.5 py-1 text-xs font-bold transition-colors ${
+            language === "en"
+              ? "bg-clinical-surface text-clinical-teal-dark"
+              : "text-clinical-ink-soft"
+          }`}
+        >
           EN
-        </span>
-        <span className="px-2.5 py-1 text-xs font-semibold text-clinical-ink-soft">اردو</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setLanguage("ur")}
+          aria-pressed={language === "ur"}
+          className={`rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+            language === "ur"
+              ? "bg-clinical-surface font-bold text-clinical-teal-dark"
+              : "text-clinical-ink-soft"
+          }`}
+        >
+          اردو
+        </button>
       </div>
     </header>
   );

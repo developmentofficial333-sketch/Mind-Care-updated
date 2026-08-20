@@ -1,8 +1,8 @@
 export const quickFilters = [
-  { label: "Stress less", icon: "sparkle", color: "brand-orange" },
-  { label: "Sleep soundly", icon: "moon", color: "brand-blue" },
-  { label: "Manage anxiety", icon: "wave", color: "brand-green" },
-  { label: "Process thoughts", icon: "leaf", color: "brand-orange" },
-  { label: "Practice meditation", icon: "flower", color: "brand-yellow" },
-  { label: "Start therapy", icon: "chat", color: "brand-blue" },
+  { label: "Quick help", icon: "sparkle", color: "brand-orange", emoji: "⚡" },
+  { label: "Sleep soundly", icon: "moon", color: "brand-blue", emoji: "🌙" },
+  { label: "Manage anxiety", icon: "wave", color: "brand-green", emoji: "🧘" },
+  { label: "Deep recovery", icon: "leaf", color: "brand-orange", emoji: "🌱" },
+  { label: "Practice meditation", icon: "flower", color: "brand-yellow", emoji: "☀️" },
+  { label: "Daily clarity", icon: "chat", color: "brand-blue", emoji: "🧠" },
 ];

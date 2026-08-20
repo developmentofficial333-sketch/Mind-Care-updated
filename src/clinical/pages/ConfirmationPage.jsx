@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getAppointment } from "../firebase/appointments";
+import VideoCallModal from "../components/VideoCallModal";
 
 function Toggle({ on, onClick }) {
   return (
@@ -28,6 +29,7 @@ export default function ConfirmationPage() {
   const [loading, setLoading] = useState(true);
   const [emailReminder, setEmailReminder] = useState(true);
   const [smsReminder, setSmsReminder] = useState(true);
+  const [showCall, setShowCall] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -77,14 +79,41 @@ export default function ConfirmationPage() {
             {appointment.dateLabel}, {appointment.time}
           </span>
         </div>
-        <div className="flex justify-between text-xs">
+        <div className="mb-2 flex justify-between text-xs">
           <span className="text-clinical-ink-soft">Modality</span>
           <span className="font-bold text-clinical-ink">{appointment.mode}</span>
         </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="text-clinical-ink-soft">Fee</span>
+          <span className="font-bold text-clinical-ink">{appointment.fee}</span>
+        </div>
+        {appointment.bookingType === "corporate" && (
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <span className="text-clinical-ink-soft">
+              {appointment.companyName ? `Sponsored by ${appointment.companyName}` : "Sponsored"}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-clinical-success/15 px-2.5 py-1 text-[10px] font-bold text-clinical-success">
+              &#10003; Corporate Benefit Applied
+            </span>
+          </div>
+        )}
         {appointment.mode === "Online" && (
-          <p className="mt-2.5 border-t border-clinical-border pt-2.5 text-[11px] text-clinical-ink-soft">
-            Your video link will be emailed and available here 15 minutes before your session.
-          </p>
+          <div className="mt-2.5 border-t border-clinical-border pt-2.5">
+            <p className="text-[11px] text-clinical-ink-soft">
+              Your video link will be emailed and available here 15 minutes before your session.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowCall(true)}
+              className="font-clinical-heading mt-2.5 flex w-full items-center justify-center gap-2 rounded-full bg-clinical-ink px-4 py-2.5 text-xs font-bold text-white hover:bg-clinical-ink/90"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="2" y="6" width="14" height="12" rx="2" />
+                <path d="M16 10l4-2v8l-4-2" />
+              </svg>
+              Join Secure Video Consultation
+            </button>
+          </div>
         )}
       </div>
 
@@ -113,6 +142,10 @@ export default function ConfirmationPage() {
       <Link to="/app/care" className="mt-3.5 inline-block text-sm font-semibold text-clinical-teal-dark">
         Book another appointment
       </Link>
+
+      {showCall && (
+        <VideoCallModal providerName={appointment.providerName} onClose={() => setShowCall(false)} />
+      )}
     </div>
   );
 }

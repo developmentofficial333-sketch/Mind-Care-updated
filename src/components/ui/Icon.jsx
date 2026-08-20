@@ -12,17 +12,23 @@ const PATHS = {
   plus: "M12 5v14M5 12h14",
   minus: "M5 12h14",
   arrowRight: "M5 12h14M13 6l6 6-6 6",
+  play: "M7 5l12 7-12 7V5z",
+  pause: "M7 5h4v14H7zM13 5h4v14h-4z",
 };
+
+const FILLED = new Set(["play", "pause"]);
 
 export default function Icon({ name, className = "w-5 h-5", strokeWidth = 1.8 }) {
   const path = PATHS[name];
   if (!path) return null;
 
+  const isFilled = FILLED.has(name);
+
   return (
     <svg
       viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
+      fill={isFilled ? "currentColor" : "none"}
+      stroke={isFilled ? "none" : "currentColor"}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"

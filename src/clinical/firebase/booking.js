@@ -33,7 +33,17 @@ export class BookingConflictError extends Error {
  */
 export async function bookAppointment(
   uid,
-  { providerId, providerName, mode, dateLabel, isoDate, time, fee }
+  {
+    providerId,
+    providerName,
+    mode,
+    dateLabel,
+    isoDate,
+    time,
+    fee,
+    bookingType = "self-pay",
+    companyName = null,
+  }
 ) {
   const { getFirestore, doc, collection, runTransaction, serverTimestamp } = await import(
     "firebase/firestore"
@@ -64,6 +74,8 @@ export async function bookAppointment(
       isoDate,
       time,
       fee,
+      bookingType,
+      companyName,
       status: "confirmed",
       createdAt: serverTimestamp(),
     });
