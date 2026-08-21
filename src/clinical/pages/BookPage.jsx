@@ -1,9 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { providers } from "../data/providers";
+import { getApprovedProvider } from "../firebase/providers";
 import { useAuth } from "../../hooks/useAuth";
 import { getProviderBookedTimes, getMemberBookedTimes } from "../firebase/availability";
 import { bookAppointment, BookingConflictError } from "../firebase/booking";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const MODE_LABELS = { online: "Online", inperson: "In-person", either: "Either" };
 
@@ -52,7 +53,8 @@ export default function BookPage() {
   const { providerId, mode } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const provider = providers.find((p) => p.id === providerId);
+  const [provider, setProvider] = useState(null);
+  const [loadingProvider, setLoadingProvider] = useState(true);
   const days = useMemo(() => getUpcomingDays(), []);
   const [dayIndex, setDayIndex] = useState(0);
   const [time, setTime] = useState(TIMES[1]);
@@ -64,6 +66,21 @@ export default function BookPage() {
   const [companyName, setCompanyName] = useState("");
 
   const chosenDay = days[dayIndex];
+
+  useEffect(() => {
+    let cancelled = false;
+    getApprovedProvider(providerId)
+      .then((result) => {
+        if (!cancelled) setProvider(result);
+      })
+      .catch((err) => console.error("Failed to load provider:", err))
+      .finally(() => {
+        if (!cancelled) setLoadingProvider(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId]);
 
   useEffect(() => {
     if (!provider) return;
@@ -100,6 +117,7 @@ export default function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider?.id, user.uid, chosenDay.isoDate]);
 
+  if (loadingProvider) return <LoadingSpinner />;
   if (!provider || !MODE_LABELS[mode]) return <Navigate to="/app/care" replace />;
 
   const dateLabel = `${chosenDay.label} ${chosenDay.num}`;

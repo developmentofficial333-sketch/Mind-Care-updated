@@ -9,6 +9,8 @@ const INITIAL_FORM = {
   licenseNumber: "",
   yearsExperience: "",
   languages: [],
+  concerns: [],
+  feeAmount: "",
   city: "",
   message: "",
 };
@@ -33,10 +35,19 @@ export function useProviderApplicationForm() {
     }));
   }, []);
 
+  const toggleConcern = useCallback((concern) => {
+    setForm((prev) => ({
+      ...prev,
+      concerns: prev.concerns.includes(concern)
+        ? prev.concerns.filter((c) => c !== concern)
+        : [...prev.concerns, concern],
+    }));
+  }, []);
+
   const submit = useCallback(async () => {
     setStatus("loading");
     try {
-      await submitProviderApplication(form);
+      await submitProviderApplication({ ...form, feeAmount: Number(form.feeAmount) || null });
       setStatus("success");
       setForm(INITIAL_FORM);
     } catch (err) {
@@ -45,5 +56,5 @@ export function useProviderApplicationForm() {
     }
   }, [form]);
 
-  return { form, updateField, toggleLanguage, status, submit };
+  return { form, updateField, toggleLanguage, toggleConcern, status, submit };
 }

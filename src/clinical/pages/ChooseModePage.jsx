@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
-import { providers } from "../data/providers";
+import { getApprovedProvider } from "../firebase/providers";
+import LoadingSpinner from "../../components/ui/LoadingSpinner";
 
 const MODES = [
   { id: "online", label: "Online", description: "Secure video or audio session" },
@@ -11,9 +12,26 @@ const MODES = [
 export default function ChooseModePage() {
   const { providerId } = useParams();
   const navigate = useNavigate();
-  const provider = providers.find((p) => p.id === providerId);
+  const [provider, setProvider] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState("online");
 
+  useEffect(() => {
+    let cancelled = false;
+    getApprovedProvider(providerId)
+      .then((result) => {
+        if (!cancelled) setProvider(result);
+      })
+      .catch((err) => console.error("Failed to load provider:", err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId]);
+
+  if (loading) return <LoadingSpinner />;
   if (!provider) return <Navigate to="/app/care" replace />;
 
   return (

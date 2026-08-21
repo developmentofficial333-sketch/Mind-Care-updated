@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { resources } from "../data/resources";
-import { providers } from "../data/providers";
+import { listApprovedProviders } from "../firebase/providers";
 import { ResourceCard, ResourceModal } from "../components/ResourceCard";
 
 const FEE_BANDS = [
@@ -30,10 +30,11 @@ function ProviderCard({ provider }) {
             </span>
           </div>
           <p className="mt-0.5 text-xs text-clinical-ink-soft">
-            {provider.credentials} &middot; {provider.concerns.join(", ")}
+            {provider.credentials}
+            {provider.concerns.length > 0 && ` · ${provider.concerns.join(", ")}`}
           </p>
           <p className="mt-0.5 text-xs text-clinical-ink-soft">
-            &#9733; {provider.rating} &middot; {provider.fee} &middot; {provider.location}
+            {provider.fee} &middot; {provider.location}
           </p>
         </div>
       </div>
@@ -56,11 +57,33 @@ export default function CarePage() {
   const [filters, setFilters] = useState(INITIAL_FILTERS);
   const [resourceCategory, setResourceCategory] = useState("All");
   const [openResource, setOpenResource] = useState(null);
+  const [providers, setProviders] = useState([]);
+  const [loadingProviders, setLoadingProviders] = useState(true);
+  const [providersError, setProvidersError] = useState(false);
 
-  const disciplines = useMemo(() => uniqueValues(providers, (p) => p.discipline), []);
-  const concerns = useMemo(() => uniqueValues(providers, (p) => p.concerns), []);
-  const languages = useMemo(() => uniqueValues(providers, (p) => p.languages), []);
-  const locations = useMemo(() => uniqueValues(providers, (p) => p.location), []);
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingProviders(true);
+    listApprovedProviders()
+      .then((result) => {
+        if (!cancelled) setProviders(result);
+      })
+      .catch((err) => {
+        console.error("Failed to load providers:", err);
+        if (!cancelled) setProvidersError(true);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProviders(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const disciplines = useMemo(() => uniqueValues(providers, (p) => p.discipline), [providers]);
+  const concerns = useMemo(() => uniqueValues(providers, (p) => p.concerns), [providers]);
+  const languages = useMemo(() => uniqueValues(providers, (p) => p.languages), [providers]);
+  const locations = useMemo(() => uniqueValues(providers, (p) => p.location), [providers]);
   const resourceCategories = useMemo(
     () => ["All", ...uniqueValues(resources, (r) => r.category)],
     []
@@ -228,10 +251,26 @@ export default function CarePage() {
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
-            {filteredProviders.length ? (
+            {loadingProviders ? (
+              <div className="flex justify-center py-10">
+                <div
+                  className="h-7 w-7 animate-spin rounded-full border-[3px] border-clinical-border border-t-clinical-teal"
+                  role="status"
+                  aria-label="Loading providers"
+                />
+              </div>
+            ) : providersError ? (
+              <p className="py-6 text-center text-sm text-clinical-ink-soft">
+                Couldn&apos;t load providers right now — please try again shortly.
+              </p>
+            ) : filteredProviders.length ? (
               filteredProviders.map((provider) => (
                 <ProviderCard key={provider.id} provider={provider} />
               ))
+            ) : providers.length === 0 ? (
+              <p className="py-6 text-center text-sm text-clinical-ink-soft">
+                No verified providers yet — check back soon.
+              </p>
             ) : (
               <p className="py-6 text-center text-sm text-clinical-ink-soft">
                 No providers match those filters.

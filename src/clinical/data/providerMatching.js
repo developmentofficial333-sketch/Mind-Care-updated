@@ -1,5 +1,3 @@
-import { providers } from "./providers";
-
 /**
  * Heuristic keyword match between a quiz "need" and a provider's listed
  * concerns — a simple relevance ranking, not a clinical assessment. Score
@@ -22,8 +20,8 @@ function scoreProvider(provider, need, language) {
   return { score, matched: true, speaksLanguage };
 }
 
-/** All providers, ranked by relevance to `need`/`language`, best match first. */
-export function matchProviders(need, language) {
+/** Ranks a given list of providers by relevance to `need`/`language`, best match first. */
+export function matchProviders(providers, need, language) {
   return providers
     .map((provider) => ({ provider, ...scoreProvider(provider, need, language) }))
     .sort((a, b) => b.score - a.score);

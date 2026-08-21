@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { QUIZ_NEEDS, MODALITY_OPTIONS, LANGUAGE_OPTIONS, URGENCY_OPTIONS } from "../data/quiz";
 import { matchProviders } from "../data/providerMatching";
+import { listApprovedProviders } from "../firebase/providers";
 
 const TOTAL_STEPS = 3;
 
@@ -151,10 +152,11 @@ function MatchedProviderCard({ provider, score, matched, speaksLanguage, isTopMa
             </span>
           </div>
           <p className="mt-0.5 text-xs text-clinical-ink-soft">
-            {provider.credentials} &middot; {provider.concerns.join(", ")}
+            {provider.credentials}
+            {provider.concerns.length > 0 && ` · ${provider.concerns.join(", ")}`}
           </p>
           <p className="mt-0.5 text-xs text-clinical-ink-soft">
-            &#9733; {provider.rating} &middot; {provider.fee} &middot; {provider.location}
+            {provider.fee} &middot; {provider.location}
           </p>
           {!speaksLanguage && (
             <p className="mt-0.5 text-[11px] text-clinical-amber-dark">
@@ -177,7 +179,28 @@ function MatchedProviderCard({ provider, score, matched, speaksLanguage, isTopMa
 function ResultsStep({ answers }) {
   const navigate = useNavigate();
   const need = QUIZ_NEEDS.find((n) => n.id === answers.needId);
-  const ranked = useMemo(() => matchProviders(need, answers.language), [need, answers.language]);
+  const [providers, setProviders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    listApprovedProviders()
+      .then((result) => {
+        if (!cancelled) setProviders(result);
+      })
+      .catch((err) => console.error("Failed to load providers:", err))
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const ranked = useMemo(
+    () => matchProviders(providers, need, answers.language),
+    [providers, need, answers.language]
+  );
   const topMatchId = ranked.find((r) => r.matched)?.provider.id;
 
   function handleBook(providerId) {
@@ -199,17 +222,31 @@ function ResultsStep({ answers }) {
       </div>
 
       <div className="mt-4 flex flex-col gap-3">
-        {ranked.map(({ provider, score, matched, speaksLanguage }) => (
-          <MatchedProviderCard
-            key={provider.id}
-            provider={provider}
-            score={score}
-            matched={matched}
-            speaksLanguage={speaksLanguage}
-            isTopMatch={provider.id === topMatchId}
-            onBook={() => handleBook(provider.id)}
-          />
-        ))}
+        {loading ? (
+          <div className="flex justify-center py-10">
+            <div
+              className="h-7 w-7 animate-spin rounded-full border-[3px] border-clinical-border border-t-clinical-teal"
+              role="status"
+              aria-label="Loading providers"
+            />
+          </div>
+        ) : ranked.length === 0 ? (
+          <p className="py-6 text-center text-sm text-clinical-ink-soft">
+            No verified providers yet — check back soon.
+          </p>
+        ) : (
+          ranked.map(({ provider, score, matched, speaksLanguage }) => (
+            <MatchedProviderCard
+              key={provider.id}
+              provider={provider}
+              score={score}
+              matched={matched}
+              speaksLanguage={speaksLanguage}
+              isTopMatch={provider.id === topMatchId}
+              onBook={() => handleBook(provider.id)}
+            />
+          ))
+        )}
       </div>
 
       <Link

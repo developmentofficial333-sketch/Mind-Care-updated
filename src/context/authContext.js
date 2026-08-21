@@ -6,4 +6,7 @@ export const AuthContext = createContext({
   providerProfile: null,
   loadingProviderProfile: false,
   isApprovedProvider: false,
+  adminProfile: null,
+  loadingAdminProfile: false,
+  isAdmin: false,
 });

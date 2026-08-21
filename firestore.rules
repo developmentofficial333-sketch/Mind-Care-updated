@@ -3,6 +3,23 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // True only for accounts MindCare's team has manually added as an
+    // `admins/{uid}` doc (via Firebase Console — there is no self-serve way
+    // to become an admin, deliberately). Used to gate review/management
+    // access to applicant and provider data below.
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Lets a signed-in user check "am I an admin?" (self-read only) so the
+    // client can gate the /admin UI — nobody, including admins themselves,
+    // can grant this via the client; it's set by hand in the console.
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     // Public newsletter signup form (Newsletter.jsx / useNewsletterSignup).
     // Doc id is the subscriber's email, so only a first-time `create` is
     // allowed — the app never gets read/list access to other people's
@@ -35,6 +52,41 @@ service cloud.firestore {
     match /memberNeeds/{uid} {
       allow read, create, update: if request.auth != null && request.auth.uid == uid;
       allow delete: if false;
+    }
+
+    // Provider identity/access record — keyed by the provider's own auth uid.
+    // The owner can always read their own record (ProviderRoute checks this
+    // on every load). Writes are either done by an admin directly (e.g.
+    // approving/suspending someone who already has an account), or by the
+    // user themselves self-provisioning their OWN record right after an
+    // admin approval — but only ever setting role/status to exactly
+    // "provider"/"approved", and only when a matching providerApprovals doc
+    // (admin-written only, see below) proves an admin actually approved
+    // that email. A user can never grant themselves provider access.
+    match /providerProfiles/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid;
+      // The public provider directory (CarePage.jsx) and booking flow read
+      // approved providers only — a member never sees pending/rejected
+      // provider records, only the provider themselves (rule above) does.
+      allow get, list: if request.auth != null && resource.data.status == "approved";
+      allow create, update: if isAdmin()
+        || (request.auth != null && request.auth.uid == uid
+            && request.resource.data.role == "provider"
+            && request.resource.data.status == "approved"
+            && exists(/databases/$(database)/documents/providerApprovals/$(request.auth.token.email.lower())));
+      allow delete: if false;
+    }
+
+    // Written only when an admin approves a providerApplications doc (see
+    // below) — doc id is the applicant's lowercased email, mirroring the
+    // newsletterSubscribers pattern. This is the bridge between a
+    // pre-account application and a real providerProfiles record: it's what
+    // the self-provisioning rule above checks for. Readable only by a
+    // signed-in user whose own auth email matches, so applicants can't see
+    // each other's approval status.
+    match /providerApprovals/{email} {
+      allow read: if request.auth != null && request.auth.token.email.lower() == email;
+      allow write: if isAdmin();
     }
 
     // Appointments are a subcollection under the owning member's own uid
@@ -79,12 +131,15 @@ service cloud.firestore {
     // "Join as a provider" application (ProviderApplicationPage.jsx). Not a
     // self-serve signup — this just queues an application for MindCare's
     // team to manually verify credentials, same create-only public-form
-    // pattern as demoRequests. No read access, so applicants' contact and
-    // license details are never exposed to other clients.
+    // pattern as demoRequests. Only admins (see isAdmin() above) can read or
+    // update applications — reviewing and approving/rejecting them from
+    // /admin — so applicants' contact and license details are never exposed
+    // to other clients.
     match /providerApplications/{id} {
       allow create: if request.resource.data.email is string
                     && request.resource.data.createdAt == request.time;
-      allow read, update, delete: if false;
+      allow read, update: if isAdmin();
+      allow delete: if false;
     }
 
     // Everything else stays locked down by default.

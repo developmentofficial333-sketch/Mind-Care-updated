@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { signUp } from "../../firebase/auth";
 import { getAuthErrorMessage } from "../../firebase/authErrors";
 import { createMemberProfile } from "../firebase/memberProfiles";
+import { resolvePostAuthPath } from "../../firebase/roleRedirect";
 import { useLanguage } from "../../hooks/useLanguage";
 
 export default function RegisterPage() {
@@ -34,7 +35,13 @@ export default function RegisterPage() {
         email,
         preferredLanguage: language,
       });
-      navigate("/dashboard");
+      // Covers the case where this email already has an approved provider
+      // application waiting — registering an account is what activates it
+      // (see resolvePostAuthPath / getOrProvisionProviderProfile), so a
+      // newly-approved provider's very first sign-up should land them on
+      // their own dashboard, not the member one.
+      const redirectPath = await resolvePostAuthPath(credential.user.uid, credential.user.email);
+      navigate(redirectPath);
     } catch (err) {
       console.error("Registration failed:", err);
       setError(getAuthErrorMessage(err.code));

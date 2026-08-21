@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signIn } from "../../firebase/auth";
 import { getAuthErrorMessage } from "../../firebase/authErrors";
-import { getProviderProfile } from "../firebase/providerProfiles";
+import { resolvePostAuthPath } from "../../firebase/roleRedirect";
 
 export default function ClinicalLoginPage() {
   const navigate = useNavigate();
@@ -17,12 +17,8 @@ export default function ClinicalLoginPage() {
     setLoading(true);
     try {
       const credential = await signIn(email, password);
-      // Checked directly here (rather than waiting on AuthProvider's own
-      // providerProfile fetch) so an approved provider lands on their
-      // dashboard immediately on this same login, not one render late.
-      const providerProfile = await getProviderProfile(credential.user.uid).catch(() => null);
-      const isApprovedProvider = providerProfile?.role === "provider" && providerProfile?.status === "approved";
-      navigate(isApprovedProvider ? "/provider/dashboard" : "/dashboard");
+      const redirectPath = await resolvePostAuthPath(credential.user.uid, credential.user.email);
+      navigate(redirectPath);
     } catch (err) {
       console.error("Login failed:", err);
       setError(getAuthErrorMessage(err.code));

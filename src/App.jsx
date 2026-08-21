@@ -3,8 +3,12 @@ import { AuthProvider } from "./context/AuthProvider";
 import { LanguageProvider } from "./context/LanguageProvider";
 import ProtectedRoute from "./components/routing/ProtectedRoute";
 import ProviderRoute from "./components/routing/ProviderRoute";
+import AdminRoute from "./components/routing/AdminRoute";
 import MainLayout from "./layouts/MainLayout";
 import BusinessLayout from "./layouts/BusinessLayout";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminLoginPage from "./pages/admin/AdminLoginPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import LandingPage from "./pages/LandingPage";
 import RequestDemoPage from "./pages/RequestDemoPage";
 import ProviderApplicationPage from "./pages/ProviderApplicationPage";
@@ -37,6 +41,18 @@ function App() {
 
           <Route element={<BusinessLayout />}>
             <Route path="/request-demo" element={<RequestDemoPage />} />
+          </Route>
+
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminRoute>
+                  <AdminDashboardPage />
+                </AdminRoute>
+              }
+            />
           </Route>
 
           <Route element={<ClinicalLayout />}>

@@ -3,7 +3,7 @@ import Button from "../components/ui/Button";
 import FormField from "../components/ui/FormField";
 import SelectField from "../components/ui/SelectField";
 import { useProviderApplicationForm } from "../hooks/useProviderApplicationForm";
-import { disciplines, languageOptions } from "../data/providerApplicationForm";
+import { disciplines, languageOptions, concernOptions } from "../data/providerApplicationForm";
 
 const VALUE_PROPS = [
   {
@@ -21,7 +21,7 @@ const VALUE_PROPS = [
 ];
 
 export default function ProviderApplicationPage() {
-  const { form, updateField, toggleLanguage, status, submit } = useProviderApplicationForm();
+  const { form, updateField, toggleLanguage, toggleConcern, status, submit } = useProviderApplicationForm();
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -124,6 +124,40 @@ export default function ProviderApplicationPage() {
                 value={form.city}
                 onChange={(e) => updateField("city", e.target.value)}
               />
+              <FormField
+                id="feeAmount"
+                label="Session fee (PKR)*"
+                type="number"
+                min="0"
+                step="50"
+                required
+                value={form.feeAmount}
+                onChange={(e) => updateField("feeAmount", e.target.value)}
+              />
+
+              <div className="flex flex-col gap-1.5 text-left">
+                <span className="text-sm font-medium text-ink">Specialties / concerns you treat*</span>
+                <p className="text-xs text-ink-soft">
+                  This drives how you're matched to members — pick everything that applies.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {concernOptions.map((concern) => {
+                    const isSelected = form.concerns.includes(concern);
+                    return (
+                      <button
+                        key={concern}
+                        type="button"
+                        onClick={() => toggleConcern(concern)}
+                        className={`rounded-pill border px-3 py-1.5 text-xs font-semibold ${
+                          isSelected ? "border-ink bg-ink text-white" : "border-border text-ink-soft"
+                        }`}
+                      >
+                        {concern}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
 
               <div className="flex flex-col gap-1.5 text-left">
                 <span className="text-sm font-medium text-ink">Languages you practice in*</span>

@@ -4,7 +4,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useLanguage } from "../../hooks/useLanguage";
 import { getMemberProfile } from "../firebase/memberProfiles";
 import { listAppointments } from "../firebase/appointments";
-import { providers } from "../data/providers";
+import { listApprovedProviders } from "../firebase/providers";
 import { resources } from "../data/resources";
 import { CATEGORY_STYLES, DEFAULT_CATEGORY_STYLE } from "../data/resourceStyles";
 import { ResourceModal } from "../components/ResourceCard";
@@ -58,24 +58,6 @@ function todayLabel() {
   return new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 }
 
-/** Shown only when live appointments fail to load, so the section never renders empty/broken. */
-function demoAppointments() {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return [
-    {
-      id: "demo-appointment",
-      providerId: "sara-nadeem",
-      providerName: "Dr. Sara Nadeem",
-      mode: "Online",
-      dateLabel: tomorrow.toLocaleDateString("en-US", { weekday: "short", day: "numeric" }),
-      time: "2:30 PM",
-      isoDate: tomorrow.toISOString().slice(0, 10),
-      status: "confirmed",
-    },
-  ];
-}
-
 function VideoGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -93,7 +75,7 @@ function PlayGlyph() {
   );
 }
 
-function CarePlanCard({ appointment, onJoin }) {
+function CarePlanCard({ appointment, providers, onJoin }) {
   const isOnline = appointment.mode === "Online";
   const provider = providers.find((p) => p.id === appointment.providerId);
   const initials =
@@ -117,7 +99,8 @@ function CarePlanCard({ appointment, onJoin }) {
           </p>
           {provider && (
             <p className="mt-0.5 text-xs text-clinical-ink-soft">
-              {provider.discipline} &middot; {provider.concerns.join(", ")}
+              {provider.discipline}
+              {provider.concerns.length > 0 && ` · ${provider.concerns.join(", ")}`}
             </p>
           )}
         </div>
@@ -191,6 +174,7 @@ export default function DashboardPage() {
   const { t } = useLanguage();
   const [profile, setProfile] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [providers, setProviders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [mood, setMood] = useState(null);
@@ -204,11 +188,12 @@ export default function DashboardPage() {
     }
     let cancelled = false;
     setLoading(true);
-    Promise.all([getMemberProfile(user.uid), listAppointments(user.uid)])
-      .then(([memberProfile, memberAppointments]) => {
+    Promise.all([getMemberProfile(user.uid), listAppointments(user.uid), listApprovedProviders()])
+      .then(([memberProfile, memberAppointments, approvedProviders]) => {
         if (cancelled) return;
         setProfile(memberProfile);
         setAppointments(memberAppointments);
+        setProviders(approvedProviders);
         setLoadError(false);
       })
       .catch((err) => {
@@ -259,11 +244,10 @@ export default function DashboardPage() {
   const firstName =
     profile?.fullName?.split(" ")[0] || user.displayName?.split(" ")[0] || user.email?.split("@")[0] || "Member";
   const today = todayIso();
-  const realUpcoming = appointments
+  const upcoming = appointments
     .filter((a) => a.isoDate >= today && a.status !== "cancelled")
     .slice(0, 3);
-  const showingDemoAppointments = loadError && realUpcoming.length === 0;
-  const upcoming = showingDemoAppointments ? demoAppointments() : realUpcoming;
+  const showLoadErrorNotice = loadError && upcoming.length === 0;
 
   const featuredResource = resources.find((r) => r.id === "5-min-breathing");
   const quickLaunchResources = QUICK_LAUNCH.map((entry) => ({
@@ -337,16 +321,21 @@ export default function DashboardPage() {
                 Find a provider
               </Link>
             </div>
-            {showingDemoAppointments && (
-              <p className="mt-2 text-[11px] font-semibold text-clinical-amber-dark">
-                Showing example data — we couldn&apos;t load your live appointments right now.
-              </p>
-            )}
             <div className="mt-4 flex flex-col gap-4">
               {upcoming.length ? (
                 upcoming.map((appointment) => (
-                  <CarePlanCard key={appointment.id} appointment={appointment} onJoin={setCallProvider} />
+                  <CarePlanCard key={appointment.id} appointment={appointment} providers={providers} onJoin={setCallProvider} />
                 ))
+              ) : showLoadErrorNotice ? (
+                <div className="rounded-3xl bg-white p-8 text-center shadow-card">
+                  <p className="text-3xl">⚠️</p>
+                  <p className="font-clinical-heading mt-2 text-sm font-bold text-clinical-ink">
+                    Couldn&apos;t load your appointments
+                  </p>
+                  <p className="mt-1 text-xs text-clinical-ink-soft">
+                    Please check your connection and refresh the page.
+                  </p>
+                </div>
               ) : (
                 <div className="rounded-3xl bg-white p-8 text-center shadow-card">
                   <p className="text-3xl">🌱</p>

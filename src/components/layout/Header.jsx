@@ -61,7 +61,13 @@ function LanguageToggle({ className = "" }) {
   );
 }
 
-function AccountMenu({ user }) {
+function dashboardPathFor({ isAdmin, isApprovedProvider }) {
+  if (isAdmin) return "/admin";
+  if (isApprovedProvider) return "/provider/dashboard";
+  return "/dashboard";
+}
+
+function AccountMenu({ user, isAdmin, isApprovedProvider }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
@@ -107,7 +113,7 @@ function AccountMenu({ user }) {
         <div className="absolute right-0 top-full z-40 mt-2 w-48 rounded-lg border border-border bg-white p-2 shadow-card">
           <p className="truncate px-3 py-1.5 text-xs text-ink-soft">{user.email}</p>
           <Link
-            to="/dashboard"
+            to={dashboardPathFor({ isAdmin, isApprovedProvider })}
             onClick={() => setOpen(false)}
             className="block rounded-md px-3 py-2 text-sm font-medium text-ink hover:bg-surface"
           >
@@ -128,9 +134,10 @@ function AccountMenu({ user }) {
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin, isApprovedProvider } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
+  const dashboardPath = dashboardPathFor({ isAdmin, isApprovedProvider });
 
   async function handleMobileLogOut() {
     setMenuOpen(false);
@@ -176,10 +183,10 @@ export default function Header() {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Button as={Link} to="/dashboard" variant="primary">
+              <Button as={Link} to={dashboardPath} variant="primary">
                 {t("nav.myDashboard")}
               </Button>
-              <AccountMenu user={user} />
+              <AccountMenu user={user} isAdmin={isAdmin} isApprovedProvider={isApprovedProvider} />
             </div>
           ) : (
             <>
@@ -226,7 +233,7 @@ export default function Header() {
 
             {user ? (
               <>
-                <Button as={Link} to="/dashboard" variant="primary" className="w-full">
+                <Button as={Link} to={dashboardPath} variant="primary" className="w-full">
                   {t("nav.myDashboard")}
                 </Button>
                 <button
