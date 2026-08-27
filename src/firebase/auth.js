@@ -8,7 +8,7 @@ import { app, isFirebaseConfigured } from "./config";
  * authErrors.js — still show something actionable instead of falling
  * through to the generic "Something went wrong" message.
  */
-export class FirebaseConfigError extends Error {
+class FirebaseConfigError extends Error {
   constructor() {
     super(
       "Firebase is not configured: one or more VITE_FIREBASE_* environment variables are " +

@@ -3,16 +3,25 @@ import { app } from "./config";
 const APPLICATIONS_COLLECTION = "providerApplications";
 const APPROVALS_COLLECTION = "providerApprovals";
 
+// Safety cap, not real pagination — the admin table already paginates
+// client-side (PAGE_SIZE in AdminDashboardPage.jsx), but that still means
+// fetching every application on every dashboard load. 1000 covers any
+// realistic near-term volume; cursor-based pagination is the right fix
+// once applications outgrow that, not raising this number.
+const MAX_APPLICATIONS = 1000;
+
 /**
  * All "join as a provider" applications, newest first, for the admin review
  * dashboard. Only readable by admins — see isAdmin() in firestore.rules.
  */
 export async function listProviderApplications() {
-  const { getFirestore, collection, getDocs, orderBy, query } = await import("firebase/firestore");
+  const { getFirestore, collection, getDocs, orderBy, limit, query } = await import(
+    "firebase/firestore"
+  );
 
   const db = getFirestore(app);
   const snapshot = await getDocs(
-    query(collection(db, APPLICATIONS_COLLECTION), orderBy("createdAt", "desc"))
+    query(collection(db, APPLICATIONS_COLLECTION), orderBy("createdAt", "desc"), limit(MAX_APPLICATIONS))
   );
   return snapshot.docs.map((docSnapshot) => ({ id: docSnapshot.id, ...docSnapshot.data() }));
 }

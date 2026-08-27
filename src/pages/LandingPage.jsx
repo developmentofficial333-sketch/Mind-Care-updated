@@ -1,6 +1,7 @@
 import Hero from "../components/sections/Hero";
 import QuickFilters from "../components/sections/QuickFilters";
 import GuidanceShowcase from "../components/sections/GuidanceShowcase";
+import FamilySupport from "../components/sections/FamilySupport";
 import Testimonials from "../components/sections/Testimonials";
 import OrgBanner from "../components/sections/OrgBanner";
 import PartnerMarquee from "../components/sections/PartnerMarquee";
@@ -16,6 +17,7 @@ export default function LandingPage() {
       <Hero />
       <QuickFilters />
       <GuidanceShowcase />
+      <FamilySupport />
       <Testimonials />
       <OrgBanner />
       <PartnerMarquee />

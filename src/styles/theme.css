@@ -46,7 +46,7 @@
   --color-cta-text: #ffffff;
 
   /* ---- Typography ---- */
-  --font-sans: "Apercu", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-urdu: "Noto Nastaliq Urdu", "Segoe UI", sans-serif;
 
   /* ---- Radii ---- */
@@ -75,10 +75,29 @@
   --color-clinical-crisis-dark: oklch(48% 0.17 25);
   --color-clinical-success: oklch(55% 0.12 155);
   --color-clinical-sky: oklch(90% 0.04 230);
+  --color-clinical-sky-mid: oklch(62% 0.14 235);
   --color-clinical-sky-dark: oklch(45% 0.09 230);
 
   --font-clinical-heading: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-clinical-body: "Karla", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* ---- Popup bright surfaces ----
+     QuickFilterModal (landing page pill popups). A vivid, saturated
+     gradient per category — the SAME hue family as its quick-filter pill
+     (orange/indigo/blue/green/amber/pink), just brightened, not the muted
+     pastel marketing palette above and not an unrelated dark/black theme. */
+  --color-popup-orange-from: #ff9552;
+  --color-popup-orange-to: #e35f1e;
+  --color-popup-indigo-from: #8b7cf6;
+  --color-popup-indigo-to: #4f46e5;
+  --color-popup-blue-from: #4f9bff;
+  --color-popup-blue-to: #1c6dd0;
+  --color-popup-green-from: #15803d;
+  --color-popup-green-to: #01411c;
+  --color-popup-amber-from: #ffd54f;
+  --color-popup-amber-to: #f7a600;
+  --color-popup-pink-from: #ff77ab;
+  --color-popup-pink-to: #ec4899;
 }
 
 :root {

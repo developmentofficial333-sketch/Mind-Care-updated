@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Container from "../ui/Container";
 import Icon from "../ui/Icon";
+import QuickFilterModal from "./QuickFilterModal";
 import { quickFilters } from "../../data/quickFilters";
 
 const ICON_BG = {
@@ -12,12 +12,10 @@ const ICON_BG = {
 };
 
 export default function QuickFilters() {
-  const navigate = useNavigate();
   const [activeLabel, setActiveLabel] = useState(null);
 
   function handleSelect(label) {
     setActiveLabel(label);
-    window.setTimeout(() => navigate("/app/identify-need"), 200);
   }
 
   return (
@@ -62,6 +60,8 @@ export default function QuickFilters() {
           })}
         </div>
       </Container>
+
+      <QuickFilterModal label={activeLabel} onClose={() => setActiveLabel(null)} />
     </section>
   );
 }

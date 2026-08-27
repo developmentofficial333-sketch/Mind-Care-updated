@@ -89,10 +89,10 @@ function TherapyScreen() {
     <div className="flex h-full flex-col justify-between bg-white px-4 pb-6 pt-8">
       <div className="flex items-center gap-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-blue text-xs font-semibold text-white">
-          DR
+          AK
         </div>
         <div>
-          <p className="text-xs font-semibold text-ink">Dr. Amelia Reyes</p>
+          <p className="text-xs font-semibold text-ink">Dr. Ayesha Khan</p>
           <p className="text-[10px] text-brand-green">&#9679; Online now</p>
         </div>
       </div>

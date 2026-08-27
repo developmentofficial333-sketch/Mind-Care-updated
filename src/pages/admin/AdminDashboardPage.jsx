@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Toast from "../../components/ui/Toast";
+import { Spinner } from "../../components/ui/LoadingSpinner";
 import { useAuth } from "../../hooks/useAuth";
 import {
   listProviderApplications,
@@ -132,10 +133,6 @@ function StatusBadge({ status }) {
 function formatDate(timestamp) {
   if (!timestamp?.toDate) return "—";
   return timestamp.toDate().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function InlineSpinner() {
-  return <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-gray-200 border-t-ink" role="status" aria-label="Loading" />;
 }
 
 const STAT_CONFIG = [
@@ -450,7 +447,7 @@ export default function AdminDashboardPage() {
         <div className="mt-5 overflow-hidden rounded-xl border border-gray-200 bg-white">
           {loading ? (
             <div className="flex justify-center py-20">
-              <InlineSpinner />
+              <Spinner tone="neutral" />
             </div>
           ) : loadError ? (
             <div className="flex flex-col items-center gap-3 py-20 text-center">

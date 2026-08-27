@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import FormField from "../components/ui/FormField";
@@ -69,6 +70,14 @@ export default function RequestDemoPage() {
                   </option>
                 ))}
               </SelectField>
+
+              <p className="-mt-2 text-xs text-ink-soft">
+                Individual therapist or psychiatrist looking to join mindcare yourself?{" "}
+                <Link to="/providers" className="font-semibold text-ink underline">
+                  Apply as a provider instead
+                </Link>
+                .
+              </p>
 
               <FormField
                 id="firstName"

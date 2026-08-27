@@ -2,7 +2,7 @@ export const helpOptions = [
   "I am looking for personal support",
   "I am looking for support for my employees",
   "I am a benefits consultant looking to support my clients",
-  "I am a provider or health plan interested in mindcare",
+  "I represent a health plan, hospital, or clinic network",
   "I am looking to become a partner of mindcare",
 ];
 

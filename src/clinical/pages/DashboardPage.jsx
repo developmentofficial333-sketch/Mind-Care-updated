@@ -9,6 +9,7 @@ import { resources } from "../data/resources";
 import { CATEGORY_STYLES, DEFAULT_CATEGORY_STYLE } from "../data/resourceStyles";
 import { ResourceModal } from "../components/ResourceCard";
 import VideoCallModal from "../components/VideoCallModal";
+import { Spinner } from "../../components/ui/LoadingSpinner";
 
 const MOODS = [
   { id: "calm", emoji: "☀️", label: "Calm", tint: "bg-clinical-teal-soft", border: "border-clinical-teal" },
@@ -160,11 +161,7 @@ function QuickLaunchCard({ resource, emoji, onOpen }) {
 function LoadingScreen() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-cream-soft">
-      <div
-        className="h-8 w-8 animate-spin rounded-full border-[3px] border-clinical-border border-t-clinical-teal"
-        role="status"
-        aria-label="Loading"
-      />
+      <Spinner />
     </div>
   );
 }

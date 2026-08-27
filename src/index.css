@@ -81,3 +81,54 @@
 .animate-float {
   animation: float-drift 6s ease-in-out infinite;
 }
+
+/* Rotating hero headline word (Hero.jsx) — a two-phase crossfade. The word
+   fades/slides in on mount, holds, then this same element is switched to
+   the "out" keyframe just before the next word swaps in, so the transition
+   reads as a smooth crossfade instead of an abrupt cut. */
+@keyframes headline-cycle-in {
+  0% {
+    opacity: 0;
+    transform: translateY(0.35em);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes headline-cycle-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-0.35em);
+  }
+}
+
+.animate-headline-in {
+  animation: headline-cycle-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-headline-out {
+  animation: headline-cycle-out 0.45s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+/* Gentle "breathing" pulse for the hero's gradient orb decorations
+   (Hero.jsx FaceOrb) — layered on an inner element so it can run alongside
+   the outer float-drift without the two transforms overwriting each other. */
+@keyframes orb-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+.animate-orb-breathe {
+  animation: orb-breathe 4s ease-in-out infinite;
+}

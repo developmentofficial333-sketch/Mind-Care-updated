@@ -9,7 +9,7 @@ const APPROVALS_COLLECTION = "providerApprovals";
  * (role, approval status) rather than more member fields. Expected shape:
  * { role: "provider", status: "approved" | "pending" | ... }.
  */
-export async function getProviderProfile(uid) {
+async function getProviderProfile(uid) {
   const { getFirestore, doc, getDoc } = await import("firebase/firestore");
 
   const db = getFirestore(app);

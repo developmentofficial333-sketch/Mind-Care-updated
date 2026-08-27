@@ -26,18 +26,47 @@ function normalizeProvider(uid, data) {
   };
 }
 
+// Safety cap, not a real pagination limit — at national scale this list
+// could grow past what's reasonable to fetch in one query. 300 covers any
+// realistic near-term provider count; true cursor-based pagination is the
+// right fix once the directory grows past that, not raising this number.
+const MAX_PROVIDERS = 300;
+
+// DashboardPage, CarePage, and ClinicalQuizPage each call this independently
+// on mount, so navigating between them in one session would otherwise
+// re-read the whole directory from Firestore every time for data that
+// virtually never changes moment-to-moment. A short in-memory cache (module
+// state, not persisted) collapses those into one real read per TTL window —
+// cuts both Firestore read costs and load latency on every page but the
+// first. Cleared on full page reload, which is fine: a stale 60s-old list
+// during one session is a non-issue for a provider directory.
+const CACHE_TTL_MS = 60_000;
+let cachedProviders = null;
+let cachedAt = 0;
+
 export async function listApprovedProviders() {
-  const { getFirestore, collection, query, where, getDocs } = await import("firebase/firestore");
+  if (cachedProviders && Date.now() - cachedAt < CACHE_TTL_MS) {
+    return cachedProviders;
+  }
+
+  const { getFirestore, collection, query, where, limit, getDocs } = await import(
+    "firebase/firestore"
+  );
 
   const db = getFirestore(app);
   const snapshot = await getDocs(
     query(
       collection(db, PROVIDER_PROFILES_COLLECTION),
       where("role", "==", "provider"),
-      where("status", "==", "approved")
+      where("status", "==", "approved"),
+      limit(MAX_PROVIDERS)
     )
   );
-  return snapshot.docs.map((docSnapshot) => normalizeProvider(docSnapshot.id, docSnapshot.data()));
+  cachedProviders = snapshot.docs.map((docSnapshot) =>
+    normalizeProvider(docSnapshot.id, docSnapshot.data())
+  );
+  cachedAt = Date.now();
+  return cachedProviders;
 }
 
 /** Single approved provider by uid — used by pages that only need one (booking flow). */

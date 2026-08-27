@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { resources } from "../data/resources";
 import { listApprovedProviders } from "../firebase/providers";
 import { ResourceCard, ResourceModal } from "../components/ResourceCard";
+import { Spinner } from "../../components/ui/LoadingSpinner";
 
 const FEE_BANDS = [
   { label: "Under Rs 3,000", test: (fee) => fee < 3000 },
@@ -253,11 +254,7 @@ export default function CarePage() {
           <div className="mt-4 flex flex-col gap-3">
             {loadingProviders ? (
               <div className="flex justify-center py-10">
-                <div
-                  className="h-7 w-7 animate-spin rounded-full border-[3px] border-clinical-border border-t-clinical-teal"
-                  role="status"
-                  aria-label="Loading providers"
-                />
+                <Spinner size="sm" label="Loading providers" />
               </div>
             ) : providersError ? (
               <p className="py-6 text-center text-sm text-clinical-ink-soft">
