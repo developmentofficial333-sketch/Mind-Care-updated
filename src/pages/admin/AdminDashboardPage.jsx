@@ -213,6 +213,7 @@ function ApplicationDetailPanel({ application, onClose, onApprove, onReject, onR
             <DetailField label="License / registration #" value={application.licenseNumber} />
             <DetailField label="Years of experience" value={application.yearsExperience} />
             <DetailField label="City" value={application.city} />
+            <DetailField label="Practice address" value={application.address} />
             <DetailField label="Session fee" value={application.feeAmount ? `Rs ${Number(application.feeAmount).toLocaleString()}` : null} />
             <DetailField label="Submitted" value={formatDate(application.createdAt)} />
           </div>

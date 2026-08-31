@@ -3,6 +3,14 @@ import { app } from "../../firebase/config";
 const MEMBER_PROFILES_COLLECTION = "memberProfiles";
 
 /**
+ * Bump whenever PrivacyPolicyPage's section outline changes materially, so
+ * a member's stored consentVersion stays traceable to what they actually
+ * saw when they agreed. Not tied to any real legal document yet — see
+ * PrivacyPolicyPage.jsx's placeholder disclaimer.
+ */
+export const CONSENT_VERSION = "2026-08-27-v1";
+
+/**
  * Identity-only profile data (name, contact, language preference). Never
  * write clinical content (needs, session notes, assessments) into this
  * collection — those belong in a separate collection with separate rules,
@@ -18,6 +26,11 @@ export async function createMemberProfile(uid, { fullName, email, preferredLangu
     fullName,
     email,
     preferredLanguage,
+    // RegisterPage only calls this after its own `agreed` checkbox check
+    // passes, so consent is always true by the time it's recorded here —
+    // there's no path to a stored `false`.
+    consentAcceptedAt: serverTimestamp(),
+    consentVersion: CONSENT_VERSION,
     createdAt: serverTimestamp(),
   });
 }

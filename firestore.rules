@@ -89,6 +89,20 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Provider's recurring weekly open hours (ProviderDashboardPage's
+    // Availability tab), one doc per provider keyed by their own uid —
+    // mirrors providerProfiles' 1:1 shape. Readable by any signed-in user
+    // (not gated to "approved" providers only, unlike providerProfiles)
+    // because this is working-hours data, not PII or clinical content —
+    // BookPage.jsx needs to read ANY provider's hours to generate real
+    // slots, and gating that on a cross-collection status lookup would add
+    // rule complexity for no real security benefit here.
+    match /providerAvailability/{uid} {
+      allow read: if request.auth != null;
+      allow create, update: if request.auth != null && request.auth.uid == uid;
+      allow delete: if false;
+    }
+
     // Appointments are a subcollection under the owning member's own uid
     // path, not a top-level collection filtered by a memberUid field —
     // that makes owner-scoping trivial and airtight (no query-shape
@@ -96,7 +110,22 @@ service cloud.firestore {
     // filtering correctly.
     match /members/{uid}/appointments/{appointmentId} {
       allow read, create: if request.auth != null && request.auth.uid == uid;
-      allow update, delete: if false;
+
+      // Still immutable to the member (original design, see above) — but
+      // the PROVIDER this appointment is WITH may mark it complete or
+      // cancelled from their own dashboard. Scoped to exactly the `status`
+      // field, and to the provider already recorded on the EXISTING doc
+      // (not any provider who happens to know the id), so this can never
+      // be used to alter fee, time, or any other field of a member's
+      // booking. Without this, ProviderDashboardPage's mirrored status
+      // update (see providers/{providerId}/appointments below) would leave
+      // the member's own copy permanently stuck on "confirmed".
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.providerId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"])
+        && request.resource.data.status in ["completed", "cancelled"];
+
+      allow delete: if false;
 
       // Post-session feedback (FollowUpPage.jsx) — append-only, kept
       // separate from the appointment doc above so the original booking
@@ -105,6 +134,80 @@ service cloud.firestore {
         allow read, create: if request.auth != null && request.auth.uid == uid;
         allow update, delete: if false;
       }
+    }
+
+    // Mirror of the member-side appointment doc above, written by
+    // bookAppointment()'s transaction alongside it (same doc id) — lets a
+    // provider see and manage their own upcoming appointments
+    // (ProviderDashboardPage) without a collectionGroup query across every
+    // member's appointments, which would need a rule correct across ALL
+    // members at once instead of this trivially-auditable single-uid match
+    // — same reasoning as members/{uid}/bookedSlots below not being a
+    // top-level collection filtered by a memberUid field.
+    //
+    // `create` is granted to any signed-in user, not
+    // request.auth.uid == providerId, because the WRITER here is the
+    // booking MEMBER, not the provider — same reason
+    // providers/{id}/bookedSlots below isn't scoped to the provider's own
+    // uid either. The constraints below (providerId must match the path,
+    // memberUid must match the writer, status must start "confirmed") are
+    // what stop this being abused to plant docs in another provider's list.
+    match /providers/{providerId}/appointments/{appointmentId} {
+      allow create: if request.auth != null
+        && request.resource.data.providerId == providerId
+        && request.resource.data.memberUid == request.auth.uid
+        && request.resource.data.status == "confirmed";
+
+      // Only the provider this appointment is WITH may ever read it back —
+      // the one place a provider legitimately sees a member's name;
+      // memberProfiles itself stays fully owner-locked.
+      allow read: if request.auth != null && request.auth.uid == providerId;
+
+      // Mirrors the member-side update rule above: status-only, and only
+      // to "completed"/"cancelled".
+      allow update: if request.auth != null && request.auth.uid == providerId
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status"])
+        && request.resource.data.status in ["completed", "cancelled"];
+      allow delete: if false;
+    }
+
+    // A provider's free-text notes on one appointment (ProviderDashboardPage's
+    // "Session notes" editor / SessionPage's read-only display for the
+    // member). Deliberately a single shared doc, not a mirror like
+    // providers/{id}/appointments above — here exactly one side (the
+    // provider) ever writes, and both sides only need to read the same
+    // content, so there's nothing to keep in sync by duplicating it.
+    // Doc id reuses the appointment's own id.
+    match /consultationNotes/{appointmentId} {
+      // `resource == null` first, before touching resource.data: most
+      // appointments have no note yet, and getConsultationNote() calls get()
+      // on those to find out — evaluating resource.data on a nonexistent
+      // doc errors out the whole rule (not just "false"), which Firestore
+      // reports back to the client as permission-denied instead of "not
+      // found". A nonexistent note has no content to protect, so it's safe
+      // to let any signed-in user's existence-check through.
+      allow read: if request.auth != null &&
+        (resource == null
+          || request.auth.uid == resource.data.providerId
+          || request.auth.uid == resource.data.memberUid);
+
+      // Cross-checked against the provider's own real appointment mirror
+      // (not just the client-supplied fields on this doc) so a note can't
+      // be planted for an appointment that isn't actually this provider's,
+      // or attributed to a member who was never actually booked with them.
+      allow create: if request.auth != null
+        && request.resource.data.providerId == request.auth.uid
+        && exists(/databases/$(database)/documents/providers/$(request.auth.uid)/appointments/$(appointmentId))
+        && get(/databases/$(database)/documents/providers/$(request.auth.uid)/appointments/$(appointmentId)).data.memberUid == request.resource.data.memberUid;
+
+      // Only the owning provider can edit, and never re-point a note at a
+      // different provider/member after creation.
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.providerId
+        && request.resource.data.providerId == resource.data.providerId
+        && request.resource.data.memberUid == resource.data.memberUid;
+
+      allow delete: if false;
     }
 
     // Real-time booking-slot reservations (booking.js). Two collections,

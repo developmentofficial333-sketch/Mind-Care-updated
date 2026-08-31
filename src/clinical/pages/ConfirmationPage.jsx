@@ -4,31 +4,11 @@ import { useAuth } from "../../hooks/useAuth";
 import { getAppointment } from "../firebase/appointments";
 import VideoCallModal from "../components/VideoCallModal";
 
-function Toggle({ on, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors ${
-        on ? "bg-clinical-teal" : "bg-clinical-border"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white transition-all ${
-          on ? "left-[20px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  );
-}
-
 export default function ConfirmationPage() {
   const { appointmentId } = useParams();
   const { user } = useAuth();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [emailReminder, setEmailReminder] = useState(true);
-  const [smsReminder, setSmsReminder] = useState(true);
   const [showCall, setShowCall] = useState(false);
 
   useEffect(() => {
@@ -121,15 +101,20 @@ export default function ConfirmationPage() {
         <p className="text-xs font-bold text-clinical-ink-soft">REMINDERS</p>
         <div className="flex items-center justify-between border-b border-clinical-border py-3">
           <span className="text-sm font-semibold text-clinical-ink">Email reminder</span>
-          <Toggle on={emailReminder} onClick={() => setEmailReminder((v) => !v)} />
+          <span className="text-xs font-bold text-clinical-ink-soft">
+            {appointment.emailReminder ? "On" : "Off"}
+          </span>
         </div>
         <div className="flex items-center justify-between py-3">
           <span className="text-sm font-semibold text-clinical-ink">SMS reminder</span>
-          <Toggle on={smsReminder} onClick={() => setSmsReminder((v) => !v)} />
+          <span className="text-xs font-bold text-clinical-ink-soft">
+            {appointment.smsReminder ? "On" : "Off"}
+          </span>
         </div>
         <p className="mt-1 text-[11px] text-clinical-ink-soft">
-          These preferences aren&apos;t saved yet — actually sending reminders needs an email/SMS
-          provider (e.g. SendGrid, Twilio) connected on the backend, which isn&apos;t set up.
+          Set when you booked. Reminder choice is saved, but nothing sends on it yet — that needs
+          an email/SMS provider (e.g. SendGrid, Twilio) connected on the backend, which isn&apos;t
+          set up.
         </p>
       </div>
 

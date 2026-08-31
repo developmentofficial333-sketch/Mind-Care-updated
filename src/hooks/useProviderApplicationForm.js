@@ -12,6 +12,7 @@ const INITIAL_FORM = {
   concerns: [],
   feeAmount: "",
   city: "",
+  address: "",
   message: "",
 };
 

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import Container from "../components/ui/Container";
 import Button from "../components/ui/Button";
 import FormField from "../components/ui/FormField";
@@ -56,6 +57,14 @@ export default function ProviderApplicationPage() {
               <p className="mt-2 text-sm text-ink-soft">
                 Our team will review your credentials and reach out to your email within a few
                 business days.
+              </p>
+              <p className="mt-4 text-sm text-ink-soft">
+                Once approved, come back and{" "}
+                <Link to="/app/register" className="font-semibold text-ink underline">
+                  create your account
+                </Link>{" "}
+                using this same email address — that&apos;s what activates your provider
+                dashboard.
               </p>
             </div>
           ) : (
@@ -123,6 +132,12 @@ export default function ProviderApplicationPage() {
                 required
                 value={form.city}
                 onChange={(e) => updateField("city", e.target.value)}
+              />
+              <FormField
+                id="address"
+                label="Practice address (for in-person sessions)"
+                value={form.address}
+                onChange={(e) => updateField("address", e.target.value)}
               />
               <FormField
                 id="feeAmount"

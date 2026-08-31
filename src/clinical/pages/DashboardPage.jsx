@@ -10,6 +10,7 @@ import { CATEGORY_STYLES, DEFAULT_CATEGORY_STYLE } from "../data/resourceStyles"
 import { ResourceModal } from "../components/ResourceCard";
 import VideoCallModal from "../components/VideoCallModal";
 import { Spinner } from "../../components/ui/LoadingSpinner";
+import { toLocalIsoDate } from "../utils/slotGeneration";
 
 const MOODS = [
   { id: "calm", emoji: "☀️", label: "Calm", tint: "bg-clinical-teal-soft", border: "border-clinical-teal" },
@@ -52,7 +53,9 @@ const QUICK_LAUNCH = [
 const MEDIA_SUFFIX = { Audio: "audio", Article: "read", Exercise: "exercise" };
 
 function todayIso() {
-  return new Date().toISOString().slice(0, 10);
+  // Local calendar date, not UTC — see slotGeneration.js's toLocalIsoDate
+  // for why toISOString() alone silently shifts the day in PKT (UTC+5).
+  return toLocalIsoDate(new Date());
 }
 
 function todayLabel() {
@@ -242,7 +245,7 @@ export default function DashboardPage() {
     profile?.fullName?.split(" ")[0] || user.displayName?.split(" ")[0] || user.email?.split("@")[0] || "Member";
   const today = todayIso();
   const upcoming = appointments
-    .filter((a) => a.isoDate >= today && a.status !== "cancelled")
+    .filter((a) => a.isoDate >= today && a.status === "confirmed")
     .slice(0, 3);
   const showLoadErrorNotice = loadError && upcoming.length === 0;
 

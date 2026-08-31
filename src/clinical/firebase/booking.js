@@ -36,6 +36,7 @@ export async function bookAppointment(
   {
     providerId,
     providerName,
+    memberName,
     mode,
     dateLabel,
     isoDate,
@@ -43,6 +44,13 @@ export async function bookAppointment(
     fee,
     bookingType = "self-pay",
     companyName = null,
+    // Captured here, not editable after booking — the appointment doc is
+    // immutable once created (see firestore.rules), so this is the only
+    // point where a reminder preference can ever be written. Nothing sends
+    // on it yet: that needs a Cloud Function + an email/SMS provider
+    // (SendGrid/Twilio), not built here.
+    emailReminder = true,
+    smsReminder = true,
   }
 ) {
   const { getFirestore, doc, collection, runTransaction, serverTimestamp } = await import(
@@ -54,6 +62,9 @@ export async function bookAppointment(
   const providerSlotRef = doc(db, "providers", providerId, "bookedSlots", id);
   const memberSlotRef = doc(db, "members", uid, "bookedSlots", id);
   const appointmentRef = doc(collection(db, "members", uid, "appointments"));
+  // Reuses the same id as appointmentRef so both sides of a status update
+  // (see providerAppointments.js) can be targeted without a lookup.
+  const providerAppointmentRef = doc(db, "providers", providerId, "appointments", appointmentRef.id);
 
   await runTransaction(db, async (tx) => {
     const [providerSlotSnap, memberSlotSnap] = await Promise.all([
@@ -67,6 +78,29 @@ export async function bookAppointment(
     tx.set(providerSlotRef, { isoDate, time, reservedAt: serverTimestamp() });
     tx.set(memberSlotRef, { isoDate, time, providerId, reservedAt: serverTimestamp() });
     tx.set(appointmentRef, {
+      providerId,
+      providerName,
+      memberName,
+      mode,
+      dateLabel,
+      isoDate,
+      time,
+      fee,
+      bookingType,
+      companyName,
+      emailReminder,
+      smsReminder,
+      status: "confirmed",
+      createdAt: serverTimestamp(),
+    });
+    // The one legitimate new disclosure to a provider: memberProfiles
+    // itself stays strictly owner-read-only, but a provider needs to know
+    // who's showing up for their own appointment. Everything else here
+    // mirrors the member-side doc so ProviderDashboardPage doesn't need a
+    // second read to render a full appointment row.
+    tx.set(providerAppointmentRef, {
+      memberUid: uid,
+      memberName,
       providerId,
       providerName,
       mode,

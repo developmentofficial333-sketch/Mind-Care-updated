@@ -2,12 +2,16 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { getAppointment } from "../firebase/appointments";
+import { getApprovedProvider } from "../firebase/providers";
+import { getConsultationNote } from "../firebase/consultationNotes";
 import VideoCallModal from "../components/VideoCallModal";
 
 export default function SessionPage() {
   const { appointmentId } = useParams();
   const { user } = useAuth();
   const [appointment, setAppointment] = useState(null);
+  const [provider, setProvider] = useState(null);
+  const [note, setNote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCall, setShowCall] = useState(false);
 
@@ -23,6 +27,33 @@ export default function SessionPage() {
       cancelled = true;
     };
   }, [user.uid, appointmentId]);
+
+  // Only needed for the in-person address block below — appointments don't
+  // store the provider's address themselves (it can change after booking).
+  useEffect(() => {
+    if (!appointment || appointment.mode === "Online") return;
+    let cancelled = false;
+    getApprovedProvider(appointment.providerId)
+      .then((result) => {
+        if (!cancelled) setProvider(result);
+      })
+      .catch((err) => console.error("Failed to load provider:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [appointment]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getConsultationNote(appointmentId)
+      .then((result) => {
+        if (!cancelled) setNote(result?.note || null);
+      })
+      .catch((err) => console.error("Failed to load consultation note:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [appointmentId]);
 
   if (loading) {
     return <p className="mx-auto max-w-lg px-6 py-16 text-center text-sm text-clinical-ink-soft">Loading...</p>;
@@ -83,10 +114,14 @@ export default function SessionPage() {
           <h2 className="font-clinical-heading text-sm font-bold text-clinical-ink">
             In-person appointment
           </h2>
-          <p className="mt-1.5 text-xs text-clinical-ink-soft">
-            Practice location details aren&apos;t available yet — providers need to add their
-            address before this can show directions.
-          </p>
+          {provider?.address ? (
+            <p className="mt-1.5 text-xs text-clinical-ink-soft">{provider.address}</p>
+          ) : (
+            <p className="mt-1.5 text-xs text-clinical-ink-soft">
+              Practice location details aren&apos;t available yet — {appointment.providerName}{" "}
+              hasn&apos;t added an address.
+            </p>
+          )}
         </div>
       )}
 
@@ -104,6 +139,16 @@ export default function SessionPage() {
           <span className="font-bold text-clinical-ink capitalize">{appointment.status}</span>
         </div>
       </div>
+
+      {note && (
+        <div className="mt-5 rounded-2xl border border-clinical-border bg-clinical-surface p-4">
+          <p className="text-xs font-bold text-clinical-ink-soft">SESSION NOTES</p>
+          <p className="mt-1.5 whitespace-pre-wrap text-sm text-clinical-ink">{note}</p>
+          <p className="mt-2 text-[11px] text-clinical-ink-soft">
+            From {appointment.providerName}.
+          </p>
+        </div>
+      )}
 
       <Link
         to={`/app/follow-up/${appointmentId}`}

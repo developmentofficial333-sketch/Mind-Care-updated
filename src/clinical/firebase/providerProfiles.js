@@ -52,6 +52,7 @@ export async function getOrProvisionProviderProfile(uid, email) {
     licenseNumber: approval.licenseNumber,
     yearsExperience: approval.yearsExperience,
     city: approval.city,
+    address: approval.address ?? null,
     languages: approval.languages || [],
     concerns: approval.concerns || [],
     feeAmount: approval.feeAmount ?? null,

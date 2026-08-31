@@ -8,9 +8,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
   const [providerProfile, setProviderProfile] = useState(null);
-  const [loadingProviderProfile, setLoadingProviderProfile] = useState(false);
+  const [loadingProviderProfile, setLoadingProviderProfile] = useState(true);
   const [adminProfile, setAdminProfile] = useState(null);
-  const [loadingAdminProfile, setLoadingAdminProfile] = useState(false);
+  const [loadingAdminProfile, setLoadingAdminProfile] = useState(true);
 
   useEffect(() => {
     let unsubscribe;
@@ -44,7 +44,18 @@ export function AuthProvider({ children }) {
   // Looked up alongside auth state (rather than lazily per-page, the way
   // memberProfiles is) because ProviderRoute needs to know immediately
   // whether a freshly-signed-in user is an approved provider.
+  //
+  // Gated on `initializing` (not just `user`) so this can't fire its
+  // "signed out" branch — setLoadingProviderProfile(false) — while auth is
+  // still resolving on first mount, when `user` is still its initial
+  // `null` before Firebase Auth has confirmed anything. Without that
+  // guard, this effect would run once with the stale initial `user=null`,
+  // clear loadingProviderProfile early, and leave a one-render window
+  // where a real approved provider reads as `isApprovedProvider: false`
+  // right after auth actually resolves — enough for ProviderRoute to
+  // bounce them to "/" on every fresh page load or reload.
   useEffect(() => {
+    if (initializing) return;
     if (!user) {
       setProviderProfile(null);
       setLoadingProviderProfile(false);
@@ -66,12 +77,14 @@ export function AuthProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, initializing]);
 
   // Separate from providerProfile above: an account can be an admin, a
   // provider, both, or neither — these are independent role checks, not a
-  // hierarchy, so they're fetched and exposed separately.
+  // hierarchy, so they're fetched and exposed separately. Same
+  // `initializing` guard and the same reason — see the comment above.
   useEffect(() => {
+    if (initializing) return;
     if (!user) {
       setAdminProfile(null);
       setLoadingAdminProfile(false);
@@ -93,7 +106,7 @@ export function AuthProvider({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, initializing]);
 
   const isApprovedProvider = providerProfile?.role === "provider" && providerProfile?.status === "approved";
   const isAdmin = adminProfile?.role === "admin";

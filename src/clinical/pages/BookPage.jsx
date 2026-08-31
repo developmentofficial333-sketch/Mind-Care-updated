@@ -2,13 +2,22 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { getApprovedProvider } from "../firebase/providers";
 import { useAuth } from "../../hooks/useAuth";
+import { getMemberProfile } from "../firebase/memberProfiles";
+import { getProviderAvailability } from "../firebase/providerAvailability";
 import { getProviderBookedTimes, getMemberBookedTimes } from "../firebase/availability";
 import { bookAppointment, BookingConflictError } from "../firebase/booking";
+import { generateOpenSlots, toLocalIsoDate } from "../utils/slotGeneration";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
+import Toggle from "../components/Toggle";
 
 const MODE_LABELS = { online: "Online", inperson: "In-person", either: "Either" };
 
-const TIMES = ["9:00 AM", "10:30 AM", "1:00 PM", "2:30 PM", "4:00 PM", "5:30 PM"];
+// Used only as a fallback for providers who haven't set their own weekly
+// availability yet (older approvals, or one who just hasn't visited the
+// Availability tab) — real providers get generateOpenSlots() from their
+// own hours instead. Keeps existing/approved providers bookable rather
+// than suddenly showing "no times available".
+const FALLBACK_TIMES = ["9:00 AM", "10:30 AM", "1:00 PM", "2:30 PM", "4:00 PM", "5:30 PM"];
 
 const CONFLICT_MESSAGES = {
   "provider-taken": "That time was just booked by someone else — please pick another slot.",
@@ -16,25 +25,6 @@ const CONFLICT_MESSAGES = {
 };
 
 const CORPORATE_FEE_LABEL = "PKR 0 (Covered by Employer)";
-
-function Toggle({ on, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={on}
-      className={`relative h-[22px] w-10 shrink-0 rounded-full transition-colors ${
-        on ? "bg-clinical-teal" : "bg-clinical-border"
-      }`}
-    >
-      <span
-        className={`absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white transition-all ${
-          on ? "left-[20px]" : "left-0.5"
-        }`}
-      />
-    </button>
-  );
-}
 
 /** The next `count` real calendar days, starting today — not placeholder dates. */
 function getUpcomingDays(count = 7) {
@@ -44,7 +34,7 @@ function getUpcomingDays(count = 7) {
     return {
       label: date.toLocaleDateString("en-US", { weekday: "short" }),
       num: String(date.getDate()),
-      isoDate: date.toISOString().slice(0, 10),
+      isoDate: toLocalIsoDate(date),
     };
   });
 }
@@ -55,17 +45,34 @@ export default function BookPage() {
   const navigate = useNavigate();
   const [provider, setProvider] = useState(null);
   const [loadingProvider, setLoadingProvider] = useState(true);
+  const [availability, setAvailability] = useState(null);
+  const [loadingAvailability, setLoadingAvailability] = useState(true);
   const days = useMemo(() => getUpcomingDays(), []);
   const [dayIndex, setDayIndex] = useState(0);
-  const [time, setTime] = useState(TIMES[1]);
+  const [time, setTime] = useState("");
   const [unavailableTimes, setUnavailableTimes] = useState([]);
   const [checkingAvailability, setCheckingAvailability] = useState(true);
   const [booking, setBooking] = useState(false);
   const [error, setError] = useState("");
   const [isCorporate, setIsCorporate] = useState(false);
   const [companyName, setCompanyName] = useState("");
+  const [emailReminder, setEmailReminder] = useState(true);
+  const [smsReminder, setSmsReminder] = useState(true);
+  const [memberName, setMemberName] = useState("");
 
   const chosenDay = days[dayIndex];
+
+  useEffect(() => {
+    let cancelled = false;
+    getMemberProfile(user.uid)
+      .then((profile) => {
+        if (!cancelled) setMemberName(profile?.fullName || user.displayName || "");
+      })
+      .catch((err) => console.error("Failed to load member profile:", err));
+    return () => {
+      cancelled = true;
+    };
+  }, [user.uid, user.displayName]);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +90,40 @@ export default function BookPage() {
   }, [providerId]);
 
   useEffect(() => {
+    let cancelled = false;
+    setLoadingAvailability(true);
+    getProviderAvailability(providerId)
+      .then((weekly) => {
+        if (!cancelled) setAvailability(weekly);
+      })
+      .catch((err) => {
+        // Fall back to the standard-hours list on any read failure, same
+        // as the "provider hasn't set hours yet" case below.
+        console.error("Failed to load provider availability:", err);
+        if (!cancelled) setAvailability(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAvailability(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [providerId]);
+
+  const usingRealAvailability = availability != null;
+  const times = useMemo(() => {
+    if (!usingRealAvailability) return FALLBACK_TIMES;
+    return generateOpenSlots(availability, chosenDay.isoDate);
+  }, [usingRealAvailability, availability, chosenDay.isoDate]);
+
+  // Keep the selected time valid whenever the day (and so the open-slot
+  // list) changes — hop to the first open slot rather than leaving a
+  // stale/nonexistent selection.
+  useEffect(() => {
+    if (!times.includes(time)) setTime(times[0] ?? "");
+  }, [times, time]);
+
+  useEffect(() => {
     if (!provider) return;
     let cancelled = false;
     setCheckingAvailability(true);
@@ -96,7 +137,7 @@ export default function BookPage() {
         setUnavailableTimes(taken);
         // If the currently selected time just became unavailable, hop to the first open one.
         if (taken.includes(time)) {
-          const nextOpen = TIMES.find((slot) => !taken.includes(slot));
+          const nextOpen = times.find((slot) => !taken.includes(slot));
           if (nextOpen) setTime(nextOpen);
         }
       })
@@ -115,7 +156,7 @@ export default function BookPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [provider?.id, user.uid, chosenDay.isoDate]);
+  }, [provider?.id, user.uid, chosenDay.isoDate, times]);
 
   if (loadingProvider) return <LoadingSpinner />;
   if (!provider || !MODE_LABELS[mode]) return <Navigate to="/app/care" replace />;
@@ -133,6 +174,7 @@ export default function BookPage() {
       const appointmentId = await bookAppointment(user.uid, {
         providerId: provider.id,
         providerName: provider.name,
+        memberName,
         mode: MODE_LABELS[mode],
         dateLabel,
         isoDate: chosenDay.isoDate,
@@ -140,6 +182,8 @@ export default function BookPage() {
         fee: isCorporate ? CORPORATE_FEE_LABEL : provider.fee,
         bookingType: isCorporate ? "corporate" : "self-pay",
         companyName: isCorporate ? companyName.trim() : null,
+        emailReminder,
+        smsReminder,
       });
       navigate(`/app/confirmation/${appointmentId}`);
     } catch (err) {
@@ -188,35 +232,43 @@ export default function BookPage() {
       </div>
 
       <p className="mt-5 text-xs font-bold text-clinical-ink-soft">
-        AVAILABLE TIMES {checkingAvailability && "(checking...)"}
+        AVAILABLE TIMES {(checkingAvailability || loadingAvailability) && "(checking...)"}
       </p>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {TIMES.map((slot) => {
-          const isSelected = slot === time;
-          const isTaken = unavailableTimes.includes(slot);
-          return (
-            <button
-              key={slot}
-              type="button"
-              disabled={isTaken}
-              onClick={() => setTime(slot)}
-              className={`rounded-lg border-[1.5px] px-1 py-2.5 text-center text-xs font-bold ${
-                isTaken
-                  ? "cursor-not-allowed border-clinical-border bg-clinical-border/40 text-clinical-ink-soft line-through"
-                  : isSelected
-                    ? "border-clinical-teal bg-clinical-teal text-white"
-                    : "border-clinical-border bg-clinical-surface text-clinical-ink"
-              }`}
-            >
-              {slot}
-            </button>
-          );
-        })}
-      </div>
+      {times.length === 0 && !loadingAvailability ? (
+        <p className="mt-2 text-sm text-clinical-ink-soft">
+          {provider.name} isn&apos;t open on this day — try another date.
+        </p>
+      ) : (
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {times.map((slot) => {
+            const isSelected = slot === time;
+            const isTaken = unavailableTimes.includes(slot);
+            return (
+              <button
+                key={slot}
+                type="button"
+                disabled={isTaken}
+                onClick={() => setTime(slot)}
+                className={`rounded-lg border-[1.5px] px-1 py-2.5 text-center text-xs font-bold ${
+                  isTaken
+                    ? "cursor-not-allowed border-clinical-border bg-clinical-border/40 text-clinical-ink-soft line-through"
+                    : isSelected
+                      ? "border-clinical-teal bg-clinical-teal text-white"
+                      : "border-clinical-border bg-clinical-surface text-clinical-ink"
+                }`}
+              >
+                {slot}
+              </button>
+            );
+          })}
+        </div>
+      )}
       <p className="mt-1.5 text-[11px] text-clinical-ink-soft">
-        Standard practice hours shown — a provider-managed calendar isn&apos;t built yet. Greyed-out
-        times are either already booked with this provider, or clash with another appointment you
-        already have.
+        {usingRealAvailability
+          ? `Times shown reflect ${provider.name}'s own schedule.`
+          : "Standard practice hours shown — this provider hasn't set their own schedule yet."}{" "}
+        Greyed-out times are either already booked with this provider, or clash with another
+        appointment you already have.
       </p>
 
       <div className="mt-6 rounded-2xl border border-clinical-border bg-clinical-surface p-4">
@@ -271,12 +323,34 @@ export default function BookPage() {
         )}
       </div>
 
+      <div className="mt-4 rounded-2xl border border-clinical-border bg-clinical-surface p-4">
+        <p className="text-xs font-bold text-clinical-ink-soft">REMINDERS</p>
+        <div className="mt-2 flex items-center justify-between border-b border-clinical-border py-2.5">
+          <span className="text-sm font-semibold text-clinical-ink">Email reminder</span>
+          <Toggle on={emailReminder} onClick={() => setEmailReminder((v) => !v)} />
+        </div>
+        <div className="flex items-center justify-between py-2.5">
+          <span className="text-sm font-semibold text-clinical-ink">SMS reminder</span>
+          <Toggle on={smsReminder} onClick={() => setSmsReminder((v) => !v)} />
+        </div>
+        <p className="mt-1 text-[11px] text-clinical-ink-soft">
+          This choice is saved with your booking. Actually sending reminders needs an email/SMS
+          provider connected on the backend, which isn&apos;t set up yet.
+        </p>
+      </div>
+
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
       <button
         type="button"
         onClick={handleConfirm}
-        disabled={booking || checkingAvailability || (isCorporate && !companyName.trim())}
+        disabled={
+          booking ||
+          checkingAvailability ||
+          loadingAvailability ||
+          !time ||
+          (isCorporate && !companyName.trim())
+        }
         className="font-clinical-heading mt-4 w-full rounded-full bg-clinical-amber px-5 py-3.5 text-sm font-bold text-clinical-ink hover:bg-clinical-amber-dark disabled:opacity-60"
       >
         {booking ? "Booking..." : "Confirm booking"}

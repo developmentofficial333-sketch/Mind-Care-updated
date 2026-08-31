@@ -58,6 +58,7 @@ export async function approveProviderApplication(application, adminUid) {
     licenseNumber: application.licenseNumber,
     yearsExperience: application.yearsExperience,
     city: application.city,
+    address: application.address ?? null,
     languages: application.languages || [],
     concerns: application.concerns || [],
     feeAmount: application.feeAmount ?? null,

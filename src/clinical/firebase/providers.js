@@ -21,6 +21,7 @@ function normalizeProvider(uid, data) {
     concerns: data.concerns || [],
     languages: data.languages || [],
     location: data.city,
+    address: data.address ?? null,
     feeAmount: data.feeAmount ?? null,
     fee: formatFee(data.feeAmount),
   };
