@@ -18,3 +18,16 @@ export async function saveMemberNeeds(uid, selectedNeeds) {
     { merge: true }
   );
 }
+
+/**
+ * Read by the member themselves, or by a provider who actually has a
+ * booking relationship with them (see firestore.rules' providerPatients
+ * check) — used by PatientHistoryPage.jsx.
+ */
+export async function getMemberNeeds(uid) {
+  const { getFirestore, doc, getDoc } = await import("firebase/firestore");
+
+  const db = getFirestore(app);
+  const snapshot = await getDoc(doc(db, MEMBER_NEEDS_COLLECTION, uid));
+  return snapshot.exists() ? snapshot.data() : null;
+}

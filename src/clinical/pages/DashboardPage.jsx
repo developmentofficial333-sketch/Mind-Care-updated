@@ -124,13 +124,21 @@ function CarePlanCard({ appointment, providers, onJoin }) {
       </p>
 
       {isOnline ? (
-        <button
-          type="button"
-          onClick={() => onJoin(appointment.providerName)}
-          className="font-clinical-heading mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-4 py-3 text-sm font-bold text-white hover:bg-brand-blue-dark"
-        >
-          <VideoGlyph /> Join Video Call
-        </button>
+        <>
+          <button
+            type="button"
+            onClick={() => onJoin(appointment.providerName)}
+            className="font-clinical-heading mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-brand-blue px-4 py-3 text-sm font-bold text-white hover:bg-brand-blue-dark"
+          >
+            <VideoGlyph /> Join Video Call
+          </button>
+          <Link
+            to={`/app/session/${appointment.id}`}
+            className="mt-2.5 block text-center text-xs font-semibold text-clinical-teal-dark"
+          >
+            View details
+          </Link>
+        </>
       ) : (
         <Link
           to={`/app/session/${appointment.id}`}

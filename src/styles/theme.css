@@ -78,6 +78,14 @@
   --color-clinical-sky-mid: oklch(62% 0.14 235);
   --color-clinical-sky-dark: oklch(45% 0.09 230);
 
+  /* Richer, more saturated than clinical-teal — reserved for premium accent
+     moments (primary avatars, active nav state, headline highlights) on the
+     Provider Dashboard, not for large surfaces. Additive only: existing
+     clinical-teal-* tokens are untouched so nothing else in the app shifts. */
+  --color-clinical-emerald: oklch(40% 0.1 165);
+  --color-clinical-emerald-dark: oklch(32% 0.09 165);
+  --color-clinical-mint: oklch(95% 0.025 165);
+
   --font-clinical-heading: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-clinical-body: "Karla", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 

@@ -5,6 +5,14 @@ import { getAppointment } from "../firebase/appointments";
 import { getApprovedProvider } from "../firebase/providers";
 import { getConsultationNote } from "../firebase/consultationNotes";
 import VideoCallModal from "../components/VideoCallModal";
+import ChatThread from "../components/provider/ChatThread";
+
+const STATUS_LABELS = { confirmed: "Upcoming", completed: "Completed", cancelled: "Cancelled" };
+const STATUS_BADGE_STYLES = {
+  confirmed: "bg-clinical-teal-soft text-clinical-teal-dark",
+  completed: "bg-clinical-success/15 text-clinical-success",
+  cancelled: "bg-clinical-border text-clinical-ink-soft",
+};
 
 export default function SessionPage() {
   const { appointmentId } = useParams();
@@ -31,7 +39,7 @@ export default function SessionPage() {
   // Only needed for the in-person address block below — appointments don't
   // store the provider's address themselves (it can change after booking).
   useEffect(() => {
-    if (!appointment || appointment.mode === "Online") return;
+    if (!appointment || appointment.mode === "Online" || appointment.mode === "Chat") return;
     let cancelled = false;
     getApprovedProvider(appointment.providerId)
       .then((result) => {
@@ -70,6 +78,9 @@ export default function SessionPage() {
   }
 
   const isOnline = appointment.mode === "Online";
+  const isChat = appointment.mode === "Chat";
+  const statusLabel =
+    STATUS_LABELS[appointment.status] ?? appointment.status ?? "Upcoming";
 
   return (
     <div className="mx-auto max-w-lg px-6 py-6">
@@ -77,8 +88,12 @@ export default function SessionPage() {
         <h1 className="font-clinical-heading text-base font-bold text-clinical-ink">
           Session with {appointment.providerName}
         </h1>
-        <span className="rounded-full bg-clinical-teal-soft px-2.5 py-1 text-[11px] font-bold text-clinical-teal-dark">
-          Upcoming
+        <span
+          className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+            STATUS_BADGE_STYLES[appointment.status] ?? STATUS_BADGE_STYLES.confirmed
+          }`}
+        >
+          {statusLabel}
         </span>
       </div>
       <p className="mt-0.5 text-xs text-clinical-ink-soft">
@@ -108,6 +123,16 @@ export default function SessionPage() {
             </svg>
             Join Secure Video Consultation
           </button>
+        </div>
+      ) : isChat ? (
+        <div className="mt-4">
+          <ChatThread
+            appointmentId={appointmentId}
+            providerId={appointment.providerId}
+            memberUid={user.uid}
+            currentUid={user.uid}
+            otherPartyName={appointment.providerName}
+          />
         </div>
       ) : (
         <div className="mt-4 rounded-2xl border border-clinical-border bg-clinical-surface p-5">

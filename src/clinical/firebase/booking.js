@@ -65,11 +65,19 @@ export async function bookAppointment(
   // Reuses the same id as appointmentRef so both sides of a status update
   // (see providerAppointments.js) can be targeted without a lookup.
   const providerAppointmentRef = doc(db, "providers", providerId, "appointments", appointmentRef.id);
+  // Relationship marker — powers the Patients roster and gates provider
+  // read access to this member's memberNeeds (see providerPatients.js /
+  // firestore.rules). Read first so a repeat booking with the same
+  // provider doesn't clobber firstBookedAt.
+  const providerPatientRef = doc(db, "providerPatients", providerId, "patients", uid);
+  // Only for Chat-mode appointments — see sessionChat.js / firestore.rules.
+  const sessionChatRef = mode === "Chat" ? doc(db, "sessionChats", appointmentRef.id) : null;
 
   await runTransaction(db, async (tx) => {
-    const [providerSlotSnap, memberSlotSnap] = await Promise.all([
+    const [providerSlotSnap, memberSlotSnap, providerPatientSnap] = await Promise.all([
       tx.get(providerSlotRef),
       tx.get(memberSlotRef),
+      tx.get(providerPatientRef),
     ]);
 
     if (providerSlotSnap.exists()) throw new BookingConflictError("provider-taken");
@@ -113,6 +121,18 @@ export async function bookAppointment(
       status: "confirmed",
       createdAt: serverTimestamp(),
     });
+    tx.set(
+      providerPatientRef,
+      {
+        memberName,
+        lastBookedAt: serverTimestamp(),
+        ...(providerPatientSnap.exists() ? {} : { firstBookedAt: serverTimestamp() }),
+      },
+      { merge: true }
+    );
+    if (sessionChatRef) {
+      tx.set(sessionChatRef, { providerId, memberUid: uid, createdAt: serverTimestamp() });
+    }
   });
 
   return appointmentRef.id;

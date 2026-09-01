@@ -6,6 +6,7 @@ import LoadingSpinner from "../../components/ui/LoadingSpinner";
 const MODES = [
   { id: "online", label: "Online", description: "Secure video or audio session" },
   { id: "inperson", label: "In-person", description: "Visit the provider's practice location" },
+  { id: "chat", label: "Chat", description: "Message back and forth with your provider" },
   { id: "either", label: "Either", description: "Show me the earliest available option" },
 ];
 
@@ -36,6 +37,13 @@ export default function ChooseModePage() {
 
   return (
     <div className="mx-auto max-w-lg px-6 py-9">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-3 text-sm font-semibold text-clinical-ink-soft hover:text-clinical-ink"
+      >
+        &larr; Back
+      </button>
       <span className="text-xs font-bold text-clinical-teal-dark">STEP 2 OF 2</span>
       <h1 className="font-clinical-heading mt-1.5 text-2xl font-bold text-clinical-ink">
         How would you like to meet?

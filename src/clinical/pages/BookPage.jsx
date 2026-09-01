@@ -10,7 +10,7 @@ import { generateOpenSlots, toLocalIsoDate } from "../utils/slotGeneration";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import Toggle from "../components/Toggle";
 
-const MODE_LABELS = { online: "Online", inperson: "In-person", either: "Either" };
+const MODE_LABELS = { online: "Online", inperson: "In-person", chat: "Chat", either: "Either" };
 
 // Used only as a fallback for providers who haven't set their own weekly
 // availability yet (older approvals, or one who just hasn't visited the
@@ -201,6 +201,13 @@ export default function BookPage() {
 
   return (
     <div className="mx-auto max-w-lg px-6 py-9">
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        className="mb-3 text-sm font-semibold text-clinical-ink-soft hover:text-clinical-ink"
+      >
+        &larr; Back
+      </button>
       <h1 className="font-clinical-heading text-xl font-bold text-clinical-ink">
         Choose a time with {provider.name}
       </h1>

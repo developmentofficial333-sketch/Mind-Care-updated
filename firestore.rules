@@ -51,6 +51,13 @@ service cloud.firestore {
     }
     match /memberNeeds/{uid} {
       allow read, create, update: if request.auth != null && request.auth.uid == uid;
+      // A provider who actually has a booking relationship with this member
+      // (see providerPatients below) may also read their stated needs, for
+      // PatientHistoryPage.jsx — the one place clinical intake content
+      // becomes visible beyond the member themselves, gated by a real
+      // relationship marker rather than "any signed-in provider."
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/providerPatients/$(request.auth.uid)/patients/$(uid));
       allow delete: if false;
     }
 
@@ -208,6 +215,73 @@ service cloud.firestore {
         && request.resource.data.memberUid == resource.data.memberUid;
 
       allow delete: if false;
+    }
+
+    // Relationship marker — one doc per patient a provider has actually
+    // booked with, written by bookAppointment()'s transaction (booking.js).
+    // Powers PatientsTab.jsx's roster directly and is what memberNeeds'
+    // second read rule above checks before opening a patient's intake data
+    // to a provider.
+    match /providerPatients/{providerId}/patients/{memberUid} {
+      // The provider reads this for their roster. The member ALSO needs
+      // read access — not just the provider — because bookAppointment()'s
+      // transaction (run by the member's client) does a tx.get() on this
+      // doc first, to decide whether to preserve firstBookedAt on a repeat
+      // booking; without this, that read is denied and the whole
+      // transaction fails on every booking, not just the first.
+      allow read: if request.auth != null &&
+        (request.auth.uid == providerId || request.auth.uid == memberUid);
+      // Writer is the booking MEMBER, not the provider — same asymmetry as
+      // providers/{id}/bookedSlots and providers/{id}/appointments above,
+      // since it's the member's client running the booking transaction.
+      allow create, update: if request.auth != null && request.auth.uid == memberUid;
+      allow delete: if false;
+    }
+
+    // One thread per Chat-mode appointment (ChatThread.jsx, used by both
+    // SessionPage on the member side and an inline panel on the provider's
+    // Appointments tab). Unlike consultationNotes, EITHER party can be the
+    // writer here, so create cross-checks whichever side is actually
+    // sending against their own real appointment record — never just the
+    // client-supplied providerId/memberUid fields on the message itself.
+    // Parent doc per Chat-mode appointment, written by bookAppointment()'s
+    // transaction — exists specifically so the messages rule below has a
+    // single-document `get()` target. A `list` query (which is what
+    // ChatThread's onSnapshot runs on /messages) evaluates its rule ONCE
+    // for the query, not once per returned document — `resource.data` on a
+    // list rule doesn't work the way it does for a single `get()`, so
+    // real-time chat can't be secured by putting providerId/memberUid on
+    // each message the way consultationNotes does. This doc's fixed path
+    // (get()'d by appointmentId alone) sidesteps that: no per-document data
+    // needed for the list itself, so all the messages rule below.
+    match /sessionChats/{appointmentId} {
+      // `resource == null` first — an appointment booked before this doc
+      // existed (or a non-Chat appointment someone probes the path for)
+      // has no parent doc at all, and evaluating resource.data on a
+      // nonexistent doc errors the whole rule out (permission-denied
+      // instead of "nothing here"), same class of bug fixed on
+      // consultationNotes earlier.
+      allow read: if request.auth != null &&
+        (resource == null || request.auth.uid == resource.data.providerId || request.auth.uid == resource.data.memberUid);
+      allow create: if request.auth != null && request.resource.data.memberUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /sessionChats/{appointmentId}/messages/{messageId} {
+      // Same reasoning as above, but get() (not resource) is what would
+      // throw here — exists() guards it before ever dereferencing .data.
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/sessionChats/$(appointmentId)) &&
+        (request.auth.uid == get(/databases/$(database)/documents/sessionChats/$(appointmentId)).data.providerId ||
+         request.auth.uid == get(/databases/$(database)/documents/sessionChats/$(appointmentId)).data.memberUid);
+
+      allow create: if request.auth != null
+        && request.resource.data.senderUid == request.auth.uid
+        && exists(/databases/$(database)/documents/sessionChats/$(appointmentId))
+        && (request.auth.uid == get(/databases/$(database)/documents/sessionChats/$(appointmentId)).data.providerId ||
+            request.auth.uid == get(/databases/$(database)/documents/sessionChats/$(appointmentId)).data.memberUid);
+
+      allow update, delete: if false;
     }
 
     // Real-time booking-slot reservations (booking.js). Two collections,

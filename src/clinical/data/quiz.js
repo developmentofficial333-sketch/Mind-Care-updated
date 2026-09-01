@@ -34,6 +34,7 @@ export const QUIZ_NEEDS = [
 export const MODALITY_OPTIONS = [
   { id: "online", emoji: "💻", label: "Online Video Call" },
   { id: "inperson", emoji: "🏥", label: "In-Person Clinic Visit" },
+  { id: "chat", emoji: "💬", label: "Chat" },
 ];
 
 export const LANGUAGE_OPTIONS = [

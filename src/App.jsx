@@ -26,7 +26,9 @@ const ClinicalLoginPage = lazy(() => import("./clinical/pages/ClinicalLoginPage"
 const IdentifyNeedPage = lazy(() => import("./clinical/pages/IdentifyNeedPage"));
 const ClinicalQuizPage = lazy(() => import("./clinical/pages/ClinicalQuizPage"));
 const DashboardPage = lazy(() => import("./clinical/pages/DashboardPage"));
-const ProviderDashboardPage = lazy(() => import("./clinical/pages/ProviderDashboardPage"));
+const ProviderDashboardPage = lazy(() => import("./clinical/pages/provider/ProviderDashboardPage"));
+const PatientHistoryPage = lazy(() => import("./clinical/pages/provider/PatientHistoryPage"));
+const ProviderAppointmentPage = lazy(() => import("./clinical/pages/provider/ProviderAppointmentPage"));
 const CrisisSupportPage = lazy(() => import("./clinical/pages/CrisisSupportPage"));
 const CarePage = lazy(() => import("./clinical/pages/CarePage"));
 const ChooseModePage = lazy(() => import("./clinical/pages/ChooseModePage"));
@@ -91,6 +93,22 @@ function App() {
                 element={
                   <ProviderRoute redirectTo="/app/login">
                     <ProviderDashboardPage />
+                  </ProviderRoute>
+                }
+              />
+              <Route
+                path="/provider/patients/:memberUid"
+                element={
+                  <ProviderRoute redirectTo="/app/login">
+                    <PatientHistoryPage />
+                  </ProviderRoute>
+                }
+              />
+              <Route
+                path="/provider/appointments/:appointmentId"
+                element={
+                  <ProviderRoute redirectTo="/app/login">
+                    <ProviderAppointmentPage />
                   </ProviderRoute>
                 }
               />

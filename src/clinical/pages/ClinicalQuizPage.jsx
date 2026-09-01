@@ -23,25 +23,28 @@ function BackIcon({ className = "h-4 w-4" }) {
   );
 }
 
-// Soft, moderate cloud-like blurs on the light background — subtle gray/
-// white patches, not a saturated color gradient.
-function CloudBlobs() {
+// Ambient mint/emerald-tinted glows on the page background — replaces the
+// old plain gray gradient, so the wide margins either side of the narrow
+// quiz column read as deliberate atmosphere rather than empty unused space.
+function AmbientGlow() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-      <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/70 blur-3xl" />
-      <div className="absolute -right-20 top-1/3 h-64 w-64 rounded-full bg-white/60 blur-3xl" />
-      <div className="absolute -bottom-28 left-1/4 h-72 w-72 rounded-full bg-white/50 blur-3xl" />
+      <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full bg-clinical-mint/60 blur-3xl" />
+      <div className="absolute -right-24 top-1/4 h-80 w-80 rounded-full bg-clinical-sky/40 blur-3xl" />
+      <div className="absolute -bottom-36 left-1/3 h-96 w-96 rounded-full bg-clinical-teal-soft/50 blur-3xl" />
     </div>
   );
 }
 
 function ProgressDots({ step }) {
   return (
-    <div className="mb-7 flex items-center gap-1.5">
+    <div className="mb-8 flex items-center gap-1.5">
       {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
         <span
           key={i}
-          className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${i <= step ? "bg-clinical-teal" : "bg-clinical-border"}`}
+          className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ${
+            i <= step ? "bg-clinical-emerald" : "bg-clinical-border"
+          }`}
         />
       ))}
     </div>
@@ -51,30 +54,31 @@ function ProgressDots({ step }) {
 function StepHeader({ step, title }) {
   return (
     <>
-      <span className="inline-flex rounded-full bg-clinical-teal-soft px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-clinical-teal-dark">
+      <span className="inline-flex rounded-full bg-clinical-mint px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-clinical-emerald-dark">
         Step {step} of {TOTAL_STEPS}
       </span>
-      <h1 className="font-clinical-heading mt-3 text-2xl font-extrabold leading-snug text-clinical-ink md:text-3xl">{title}</h1>
+      <h1 className="font-clinical-heading mt-3 text-2xl font-extrabold leading-snug tracking-tight text-clinical-ink md:text-3xl">
+        {title}
+      </h1>
     </>
   );
 }
 
-// Shared card treatment for the option list: clean solid white with a soft,
-// moderate shadow and thin border — enough elevation to lift off the light
-// cloud background without a heavy dramatic effect.
-const OPTION_CARD = "border border-clinical-border bg-white shadow-md";
+// Shared card treatment for the option list — white, soft shadow, thin
+// border, enough elevation to lift off the ambient background.
+const OPTION_CARD = "border border-clinical-border bg-white shadow-card";
 
-// Tap-to-advance option: white pill, icon badge + label + a chevron
-// affordance (this step has no persistent "selected" state since choosing
-// it immediately moves to the next step).
+// Tap-to-advance option: icon badge + label + a chevron affordance (this
+// step has no persistent "selected" state since choosing it immediately
+// moves to the next step).
 function OptionPill({ emoji, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`group flex w-full items-center gap-4 rounded-full px-5 py-4 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-lg ${OPTION_CARD}`}
+      className={`group flex w-full items-center gap-4 rounded-full px-5 py-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg ${OPTION_CARD}`}
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-clinical-teal-soft text-xl" aria-hidden="true">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-clinical-mint text-xl" aria-hidden="true">
         {emoji}
       </span>
       <span className="font-clinical-heading flex-1 text-sm font-bold text-clinical-ink">{label}</span>
@@ -90,22 +94,27 @@ function RadioCard({ emoji, label, isSelected, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-1 items-center gap-3 rounded-2xl border-2 bg-white px-4 py-4 text-left shadow-md transition-colors ${
-        isSelected ? "border-clinical-teal" : "border-transparent"
+      className={`flex flex-1 items-center gap-3 rounded-2xl border-2 bg-white px-4 py-4 text-left shadow-card transition-all duration-150 ${
+        isSelected ? "border-clinical-emerald shadow-lg" : "border-transparent hover:-translate-y-0.5"
       }`}
     >
       {emoji && (
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-clinical-teal-soft text-lg" aria-hidden="true">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg ${
+            isSelected ? "bg-clinical-emerald text-white" : "bg-clinical-mint"
+          }`}
+          aria-hidden="true"
+        >
           {emoji}
         </span>
       )}
       <span className="font-clinical-heading flex-1 text-sm font-bold text-clinical-ink">{label}</span>
       <span
         className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-          isSelected ? "border-clinical-teal" : "border-clinical-border"
+          isSelected ? "border-clinical-emerald" : "border-clinical-border"
         }`}
       >
-        {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-clinical-teal" />}
+        {isSelected && <span className="h-2.5 w-2.5 rounded-full bg-clinical-emerald" />}
       </span>
     </button>
   );
@@ -115,7 +124,7 @@ function NeedStep({ onSelect }) {
   return (
     <div>
       <StepHeader step={1} title="What is bringing you here today?" />
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-7 flex flex-col gap-3">
         {QUIZ_NEEDS.map((need) => (
           <OptionPill key={need.id} emoji={need.emoji} label={need.label} onClick={() => onSelect(need.id)} />
         ))}
@@ -129,8 +138,8 @@ function FormatStep({ modality, language, onSetModality, onSetLanguage, onContin
     <div>
       <StepHeader step={2} title="How would you like to connect?" />
 
-      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-clinical-ink-soft">Format</p>
-      <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+      <p className="mt-7 text-xs font-bold uppercase tracking-wide text-clinical-ink-soft">Format</p>
+      <div className="mt-2.5 flex flex-col gap-3 sm:flex-row">
         {MODALITY_OPTIONS.map((option) => (
           <RadioCard
             key={option.id}
@@ -142,8 +151,8 @@ function FormatStep({ modality, language, onSetModality, onSetLanguage, onContin
         ))}
       </div>
 
-      <p className="mt-6 text-xs font-bold uppercase tracking-wide text-clinical-ink-soft">Language</p>
-      <div className="mt-2 flex gap-2">
+      <p className="mt-7 text-xs font-bold uppercase tracking-wide text-clinical-ink-soft">Language</p>
+      <div className="mt-2.5 flex gap-2">
         {LANGUAGE_OPTIONS.map((option) => {
           const isSelected = language === option.id;
           return (
@@ -151,10 +160,10 @@ function FormatStep({ modality, language, onSetModality, onSetLanguage, onContin
               key={option.id}
               type="button"
               onClick={() => onSetLanguage(option.id)}
-              className={`flex-1 rounded-full border-2 px-3 py-2.5 text-center text-sm font-bold transition-colors ${
+              className={`flex-1 rounded-full border-2 px-3 py-2.5 text-center text-sm font-bold shadow-card transition-all duration-150 ${
                 isSelected
-                  ? "border-clinical-teal bg-clinical-teal text-white"
-                  : "border-clinical-border bg-white text-clinical-ink"
+                  ? "border-clinical-emerald bg-clinical-emerald text-white"
+                  : "border-transparent bg-white text-clinical-ink hover:-translate-y-0.5"
               }`}
             >
               {option.label}
@@ -167,7 +176,7 @@ function FormatStep({ modality, language, onSetModality, onSetLanguage, onContin
         type="button"
         onClick={onContinue}
         disabled={!modality || !language}
-        className="font-clinical-heading mt-8 w-full rounded-full bg-clinical-teal px-5 py-3.5 text-sm font-extrabold text-white transition-colors hover:bg-clinical-teal-dark disabled:opacity-40"
+        className="font-clinical-heading mt-9 w-full rounded-full bg-clinical-emerald px-5 py-3.5 text-sm font-extrabold text-white shadow-card transition-all duration-150 hover:-translate-y-0.5 hover:bg-clinical-emerald-dark hover:shadow-lg disabled:translate-y-0 disabled:opacity-40 disabled:shadow-none"
       >
         Continue
       </button>
@@ -179,15 +188,15 @@ function UrgencyStep({ onSelect }) {
   return (
     <div>
       <StepHeader step={3} title="How soon would you like to speak to someone?" />
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-7 flex flex-col gap-3">
         {URGENCY_OPTIONS.map((option) => (
           <button
             key={option.id}
             type="button"
             onClick={() => onSelect(option.id)}
-            className={`group flex items-center gap-4 rounded-2xl p-4 text-left transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-lg ${OPTION_CARD}`}
+            className={`group flex items-center gap-4 rounded-2xl p-4 text-left transition-all duration-150 hover:-translate-y-0.5 hover:shadow-lg ${OPTION_CARD}`}
           >
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-clinical-teal-soft text-xl" aria-hidden="true">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-clinical-mint text-xl" aria-hidden="true">
               {option.emoji}
             </span>
             <div className="flex-1">
@@ -202,20 +211,35 @@ function UrgencyStep({ onSelect }) {
   );
 }
 
+const AVATAR_TINTS = [
+  "bg-clinical-mint text-clinical-emerald-dark",
+  "bg-clinical-sky text-clinical-sky-dark",
+  "bg-clinical-amber/25 text-clinical-amber-dark",
+];
+
+function avatarTint(name) {
+  const seed = (name || "?").split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return AVATAR_TINTS[seed % AVATAR_TINTS.length];
+}
+
 function MatchedProviderCard({ provider, score, matched, speaksLanguage, isTopMatch, onBook }) {
   return (
     <div
-      className={`rounded-2xl border-2 bg-clinical-surface p-4 ${
-        isTopMatch ? "border-clinical-success" : "border-clinical-border"
+      className={`rounded-2xl border-2 bg-white p-4 shadow-card transition-shadow duration-150 hover:shadow-lg ${
+        isTopMatch ? "border-clinical-success" : "border-transparent"
       }`}
     >
       {matched && (
-        <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-clinical-success/15 px-2.5 py-1 text-[10px] font-bold text-clinical-success">
+        <span className="mb-2.5 inline-flex items-center gap-1 rounded-full bg-clinical-success/15 px-2.5 py-1 text-[10px] font-bold text-clinical-success">
           &#127775; {score}% {isTopMatch ? "Best Match for Your Needs" : "Match"}
         </span>
       )}
       <div className="flex gap-3">
-        <div className="font-clinical-heading flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-clinical-teal-soft text-sm font-extrabold text-clinical-teal-dark">
+        <div
+          className={`font-clinical-heading flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${avatarTint(
+            provider.name
+          )}`}
+        >
           {provider.initials}
         </div>
         <div className="flex-1">
@@ -242,7 +266,7 @@ function MatchedProviderCard({ provider, score, matched, speaksLanguage, isTopMa
       <button
         type="button"
         onClick={onBook}
-        className="font-clinical-heading mt-3 block w-full rounded-full bg-clinical-amber py-2 text-center text-xs font-bold text-clinical-ink hover:bg-clinical-amber-dark"
+        className="font-clinical-heading mt-3.5 block w-full rounded-full bg-clinical-emerald py-2.5 text-center text-xs font-bold text-white shadow-card transition-colors hover:bg-clinical-emerald-dark"
       >
         Book now
       </button>
@@ -283,7 +307,14 @@ function ResultsStep({ answers }) {
 
   return (
     <div>
-      <div className="rounded-2xl bg-clinical-teal-soft p-4">
+      <span className="inline-flex rounded-full bg-clinical-mint px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-clinical-emerald-dark">
+        Your matches
+      </span>
+      <h1 className="font-clinical-heading mt-3 text-2xl font-extrabold leading-snug tracking-tight text-clinical-ink md:text-3xl">
+        Recommended for you
+      </h1>
+
+      <div className="mt-5 rounded-2xl bg-clinical-mint/60 p-4 shadow-card">
         <p className="text-sm text-clinical-ink">
           Based on your check-in for <span className="font-bold">{need?.label}</span>, here are the
           recommended licensed therapists for you:
@@ -321,7 +352,7 @@ function ResultsStep({ answers }) {
 
       <Link
         to="/app/care"
-        className="font-clinical-heading mt-5 block rounded-full border-2 border-clinical-teal py-3 text-center text-sm font-bold text-clinical-teal-dark"
+        className="font-clinical-heading mt-5 block rounded-full border-2 border-clinical-emerald py-3 text-center text-sm font-bold text-clinical-emerald-dark transition-colors hover:bg-clinical-mint"
       >
         Reset Filters / View All Doctors
       </Link>
@@ -342,14 +373,8 @@ export default function ClinicalQuizPage() {
   }
 
   return (
-    <div
-      className={
-        isQuestionStep
-          ? "relative overflow-hidden bg-gradient-to-b from-white to-slate-200"
-          : ""
-      }
-    >
-      {isQuestionStep && <CloudBlobs />}
+    <div className="relative min-h-[calc(100vh-8rem)] overflow-hidden bg-clinical-bg">
+      {isQuestionStep && <AmbientGlow />}
 
       <div className="relative mx-auto max-w-lg px-6 py-10">
         {isQuestionStep && <ProgressDots step={step} />}
@@ -385,7 +410,7 @@ export default function ClinicalQuizPage() {
           <button
             type="button"
             onClick={() => setStep((s) => s - 1)}
-            className="mt-6 flex items-center gap-1.5 text-xs font-bold text-clinical-ink-soft hover:text-clinical-ink"
+            className="mt-7 flex items-center gap-1.5 text-xs font-bold text-clinical-ink-soft hover:text-clinical-ink"
           >
             <BackIcon className="h-3.5 w-3.5" /> Back
           </button>

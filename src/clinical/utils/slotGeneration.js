@@ -3,7 +3,12 @@
 // would need Intl.DateTimeFormat with an explicit "Asia/Karachi" zone if
 // MindCare ever serves users browsing from outside Pakistan directly.
 
-const SLOT_INTERVAL_MINUTES = 90;
+// A 50-minute session (the "50-minute hour", the real convention this app
+// already advertises — see "50 minutes" on BookPage.jsx/SessionPage.jsx)
+// plus a 10-minute gap between sessions. Was 90 — that number didn't match
+// any stated session length, which is why a modest availability range only
+// ever produced one or two bookable slots.
+const SLOT_INTERVAL_MINUTES = 60;
 
 function pad(n) {
   return String(n).padStart(2, "0");
